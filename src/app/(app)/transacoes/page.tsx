@@ -50,6 +50,7 @@ function Flags({ t }: { t: Transaction }) {
   return (
     <span className="inline-flex flex-wrap gap-1">
       {t.nature !== "expense" && t.nature !== "income" && <Badge>{NATURE_LABEL[t.nature]}</Badge>}
+      {t.subscription_id && <Badge>Assinatura</Badge>}
       {t.status === "pending" && <Badge className="border-warning/40 text-warning">Pendente</Badge>}
       {t.hidden && <Badge>Oculto</Badge>}
       {t.excluded_from_reports && <Badge>Fora dos relatórios</Badge>}

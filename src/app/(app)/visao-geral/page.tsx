@@ -5,7 +5,8 @@ import { SpendingHeatmap } from "@/components/charts/spending-heatmap";
 import { buttonVariants, Card, PageHeader, Select } from "@/components/ui";
 import { describeStatement, STATEMENT_STATUS_LABEL } from "@/lib/cards";
 import { buildHeatmap, buildPace, rankCategories, summarizePace } from "@/lib/dashboard";
-import { ACCOUNT_KIND_LABEL, getAccounts, getCardOverview, getCards, getCardStatements, getBalances, getCategories, getCategoryTotals, getDailySpending, getProfile, getSummary, listTransactions } from "@/lib/data";
+import { monthlyEquivalent, upcomingCharges } from "@/lib/subscriptions";
+import { ACCOUNT_KIND_LABEL, getAccounts, getCardOverview, getCards, getCardStatements, getSubscriptions, getBalances, getCategories, getCategoryTotals, getDailySpending, getProfile, getSummary, listTransactions } from "@/lib/data";
 import { formatDateBR, todayInBrazil } from "@/lib/dates";
 import { centsFromText, formatBRL, sumCents } from "@/lib/money";
 import { filtersToQuery, monthLabel, NATURE_LABEL, parseFilters, shiftMonth } from "@/lib/transactions";
@@ -52,7 +53,10 @@ export default async function Page(props: PageProps<"/visao-geral">) {
   const diff = pace.previousSamePeriod !== null ? pace.total - pace.previousSamePeriod : null;
 
   // Cards: limit is never money in an account; upcoming bills come from the registered transactions.
-  const [cards, cardOverview] = await Promise.all([getCards(), getCardOverview()]);
+  const [cards, cardOverview, subscriptions] = await Promise.all([getCards(), getCardOverview(), getSubscriptions()]);
+  // Subscriptions: forecasts only (never an expense until the real charge is registered).
+  const nextCharges = upcomingCharges(subscriptions, today).slice(0, 5);
+  const subsMonthly = subscriptions.filter(s => s.status === "active").reduce((sum, s) => sum + monthlyEquivalent(BigInt(s.amount_cents), s.period).cents, 0n);
   const activeCards = cards.filter(c => !c.archived_at);
   const cardLimit = activeCards.reduce((s, c) => s + centsFromText(cardOverview.get(c.id)?.limit ?? c.limit_cents), 0n);
   const cardCommitted = activeCards.reduce((s, c) => s + centsFromText(cardOverview.get(c.id)?.committed ?? "0"), 0n);
@@ -118,6 +122,28 @@ export default async function Page(props: PageProps<"/visao-geral">) {
               )}
             </div>
           </div>
+        </Card>
+      )}
+
+      {subscriptions.some(s => s.status === "active") && (
+        <Card className="mt-6">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="font-medium">Assinaturas: próximas cobranças</h2>
+            <Link href="/assinaturas" className={buttonVariants({ variant: "ghost", size: "sm" })}>Ver assinaturas</Link>
+          </div>
+          <p className="mb-2 text-xs text-muted">Previsões dos próximos 30 dias (não são despesas até você registrar a cobrança). Total mensal equivalente das ativas: <span className="tabular text-ink">{formatBRL(subsMonthly)}</span>.</p>
+          {nextCharges.length === 0 ? <p className="text-sm text-muted">Nenhuma cobrança prevista nos próximos 30 dias.</p> : (
+            <ul className="divide-y divide-line text-sm">
+              {nextCharges.map(s => (
+                <li key={s.id} className="flex items-center gap-3 py-2">
+                  <span className="tabular w-20 text-xs text-muted">{formatDateBR(s.next_charge_date)}</span>
+                  <span className="min-w-0 flex-1 truncate">{s.name}</span>
+                  {s.overdue && <span className="text-xs text-warning">data passou</span>}
+                  <span className="tabular">{formatBRL(BigInt(s.amount_cents))}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </Card>
       )}
 

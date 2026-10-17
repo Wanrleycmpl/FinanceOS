@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import type { CategoryKind } from "@/lib/catalog";
 import type { StatementRow } from "@/lib/cards";
 import type { InstallmentRow, PlanRow } from "@/lib/installments";
+import type { SubscriptionRow } from "@/lib/subscriptions";
 import type { CategoryTotalRow, DayRow } from "@/lib/dashboard";
 import { escapeLike, filterRange, monthRange, PAGE_SIZE, summarize, type Direction, type Filters, type Nature, type Status } from "@/lib/transactions";
 
@@ -69,6 +70,7 @@ export type Transaction = {
   statement_month: string | null;
   plan_id: string | null;
   installment_number: number | null;
+  subscription_id: string | null;
   category_id: string | null;
   refund_of: string | null;
   description: string;
@@ -80,7 +82,7 @@ export type Transaction = {
   trashed_at: string | null;
   created_at: string;
 };
-const TX_COLUMNS = "id, nature, direction, account_id, to_account_id, card_id, statement_month, plan_id, installment_number, category_id, refund_of, description, amount_cents, date, status, hidden, excluded_from_reports, trashed_at, created_at";
+const TX_COLUMNS = "id, nature, direction, account_id, to_account_id, card_id, statement_month, plan_id, installment_number, subscription_id, category_id, refund_of, description, amount_cents, date, status, hidden, excluded_from_reports, trashed_at, created_at";
 
 /** Current settled balance and pending total per account (exact cents as text). */
 export async function getBalances(): Promise<Map<string, { balance: string; pending: string }>> {
@@ -208,6 +210,24 @@ export async function getInstallmentPlans() {
     refundedByPlan.set(plan, (refundedByPlan.get(plan) ?? 0n) + BigInt(r.amount_cents));
   }
   return { plans: plans.data as PlanRow[], installments, refundedByPlan };
+}
+
+export async function getSubscriptions(): Promise<SubscriptionRow[]> {
+  const { supabase } = await requireUser();
+  const { data, error } = await supabase.from("personal_subscriptions")
+    .select("id, name, amount_cents::text, period, anchor_day, next_charge_date, account_id, card_id, category_id, status")
+    .order("next_charge_date");
+  if (error) throw new Error("Não foi possível carregar as assinaturas. Confira se a migration da Entrega 06 foi aplicada.");
+  return data as SubscriptionRow[];
+}
+
+/** Registered (real) charges of subscriptions, newest first. */
+export async function getSubscriptionCharges(): Promise<Transaction[]> {
+  const { supabase } = await requireUser();
+  const { data, error } = await supabase.from("transactions_read").select(TX_COLUMNS)
+    .not("subscription_id", "is", null).is("trashed_at", null).order("date", { ascending: false }).limit(500);
+  if (error) throw new Error("Não foi possível carregar as cobranças das assinaturas.");
+  return data as Transaction[];
 }
 
 /** Sum of active refunds linked to a purchase, in any month. */

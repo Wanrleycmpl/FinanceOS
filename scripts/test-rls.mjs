@@ -118,6 +118,14 @@ try {
     assert.equal((await a.rpc('cancel_installment_plan', { p_plan: plan.data, p_refund_charged: false })).error, null); // limpeza: parcelas pendentes vão para a lixeira
   });
 
+  await step('assinaturas: B não vê nem cobra a assinatura de A', async () => {
+    const sub = await a.from('personal_subscriptions').insert({ name: `${tag} streaming`, amount_cents: '3990', period: 'monthly', anchor_day: 5, next_charge_date: '2026-01-05', account_id: accA }).select('id').single();
+    assert.equal(sub.error, null, 'insert de assinatura falhou (migration de assinaturas aplicada?)');
+    assert.deepEqual((await b.from('personal_subscriptions').select('id').eq('id', sub.data.id)).data, []);
+    assert.ok((await b.rpc('register_subscription_charge', { p_subscription: sub.data.id, p_date: '2026-01-05', p_amount_cents: '1' })).error);
+    assert.equal((await a.from('personal_subscriptions').update({ status: 'cancelled' }).eq('id', sub.data.id).select('id')).data.length, 1); // limpeza
+  });
+
   await step('anônimo não lê nem grava', async () => {
     assert.equal(((await anon.from('transactions').select('id')).data ?? []).length, 0);
     for (const t of ['accounts', 'categories', 'profiles']) { const r = await anon.from(t).select('id'); assert.ok(r.error || r.data.length === 0); }
