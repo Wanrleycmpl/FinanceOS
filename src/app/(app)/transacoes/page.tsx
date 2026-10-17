@@ -75,7 +75,7 @@ function RowActions({ t, back, query }: { t: Transaction; back: string; query: s
       {t.nature === "expense" && t.status === "settled" && <Link href={`/transacoes?${query}&estornar=${t.id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>Estornar</Link>}
       {flag("hidden", !t.hidden, t.hidden ? "Mostrar" : "Ocultar")}
       {flag("excluded", !t.excluded_from_reports, t.excluded_from_reports ? "Incluir nos relatórios" : "Excluir dos relatórios")}
-      {flag("trash", true, "Lixeira")}
+      {t.plan_id ? <Link href={`/parcelamentos?plano=${t.plan_id}`} className={buttonVariants({ variant: "ghost", size: "sm" })}>Parcelamento</Link> : flag("trash", true, "Lixeira")}
     </div>
   );
 }
@@ -156,7 +156,7 @@ export default async function Page(props: PageProps<"/transacoes">) {
             refund={refund}
             defaults={editing ? {
               id: editing.id, nature: editing.nature, direction: editing.direction, account_id: editing.account_id, to_account_id: editing.to_account_id,
-              card_id: editing.card_id, statement_month: editing.statement_month,
+              card_id: editing.card_id, statement_month: editing.statement_month, plan_id: editing.plan_id,
               category_id: editing.category_id, description: editing.description, amount: centsToInput(centsFromText(editing.amount_cents)), date: editing.date, status: editing.status,
             } : undefined}
           />

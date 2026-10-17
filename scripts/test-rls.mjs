@@ -108,6 +108,16 @@ try {
     const upd = await b.from('credit_cards').update({ limit_cents: 1 }).eq('id', c.data).select('id'); assert.ok(upd.error || upd.data.length === 0);
   });
 
+  await step('parcelamentos: total exato e B não cancela nem vê o plano de A', async () => {
+    const plan = await a.rpc('create_installment_plan', { p_description: `${tag} parcelado`, p_total_cents: '10000', p_count: 3, p_first_date: '2026-01-05', p_account: accA, p_card: null, p_category: null, p_paid_count: 0 });
+    assert.equal(plan.error, null, 'create_installment_plan falhou (migration de parcelamentos aplicada?)');
+    const rows = (await a.from('transactions_read').select('amount_cents').eq('plan_id', plan.data).order('installment_number')).data;
+    assert.deepEqual(rows.map(r => r.amount_cents), ['3334', '3333', '3333']);
+    assert.deepEqual((await b.from('installment_plans').select('id').eq('id', plan.data)).data, []);
+    assert.ok((await b.rpc('cancel_installment_plan', { p_plan: plan.data, p_refund_charged: false })).error);
+    assert.equal((await a.rpc('cancel_installment_plan', { p_plan: plan.data, p_refund_charged: false })).error, null); // limpeza: parcelas pendentes vão para a lixeira
+  });
+
   await step('anônimo não lê nem grava', async () => {
     assert.equal(((await anon.from('transactions').select('id')).data ?? []).length, 0);
     for (const t of ['accounts', 'categories', 'profiles']) { const r = await anon.from(t).select('id'); assert.ok(r.error || r.data.length === 0); }

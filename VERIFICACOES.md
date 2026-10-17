@@ -1,5 +1,19 @@
 # Verificações
 
+## Entrega 05 — Parcelamentos (17/10/2026, executado nesta sessão)
+
+| Verificação | Resultado |
+|---|---|
+| `npm run lint` | passou |
+| `npm run typecheck` | passou |
+| `npm test` | 13 arquivos, 67 testes, todos passaram |
+| `npm run build` | passou |
+| `npm run check:supabase` | 01–04 APLICADAS; 20261017230000_parcelamentos ainda NÃO aplicada |
+
+Cobertos no banco (PGlite, as cinco migrations): R$ 100,00 em 3 = 33,34 + 33,33 + 33,33 com soma exata e sem compra-mãe; datas mensais com fim de mês ajustado (31/01 → 28/02 → 31/03); pendente fora do saldo; confirmação muda o saldo; valor, meio e lixeira de parcela bloqueados; parcela futura não pode nascer paga; no cartão, cada parcela na sua fatura (inclusive virada de ano), todas comprometendo o limite, situação travada; cancelamento com estorno (futuras na lixeira, cobradas estornadas uma única vez, limite liberado) e sem estorno (pagas ficam); não reabre cancelado; isolamento A/B/anônimo; plano e parcelas não podem ser gravados pela API direta. Também: estados das parcelas (paga, vencida a confirmar, a pagar, na fatura, futura, cancelada) em TypeScript.
+
+**Não verificado:** telas no navegador logado (falta aplicar a migration 20261017230000).
+
 ## Entrega 04 — Cartões e faturas (17/10/2026, executado nesta sessão)
 
 | Verificação | Resultado |

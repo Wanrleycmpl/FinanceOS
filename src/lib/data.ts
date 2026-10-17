@@ -2,6 +2,7 @@ import "server-only";
 import { requireUser } from "@/lib/auth";
 import type { CategoryKind } from "@/lib/catalog";
 import type { StatementRow } from "@/lib/cards";
+import type { InstallmentRow, PlanRow } from "@/lib/installments";
 import type { CategoryTotalRow, DayRow } from "@/lib/dashboard";
 import { escapeLike, filterRange, monthRange, PAGE_SIZE, summarize, type Direction, type Filters, type Nature, type Status } from "@/lib/transactions";
 
@@ -66,6 +67,8 @@ export type Transaction = {
   to_account_id: string | null;
   card_id: string | null;
   statement_month: string | null;
+  plan_id: string | null;
+  installment_number: number | null;
   category_id: string | null;
   refund_of: string | null;
   description: string;
@@ -77,7 +80,7 @@ export type Transaction = {
   trashed_at: string | null;
   created_at: string;
 };
-const TX_COLUMNS = "id, nature, direction, account_id, to_account_id, card_id, statement_month, category_id, refund_of, description, amount_cents, date, status, hidden, excluded_from_reports, trashed_at, created_at";
+const TX_COLUMNS = "id, nature, direction, account_id, to_account_id, card_id, statement_month, plan_id, installment_number, category_id, refund_of, description, amount_cents, date, status, hidden, excluded_from_reports, trashed_at, created_at";
 
 /** Current settled balance and pending total per account (exact cents as text). */
 export async function getBalances(): Promise<Map<string, { balance: string; pending: string }>> {
@@ -183,6 +186,28 @@ export async function getStatementTransactions(cardId: string, statementMonth: s
     .order("date", { ascending: false }).limit(1000);
   if (error) throw new Error("Não foi possível carregar a fatura.");
   return data as Transaction[];
+}
+
+/** Installment plans with all their installments (including cancelled ones) and refunds per plan. */
+export async function getInstallmentPlans() {
+  const { supabase } = await requireUser();
+  const [plans, rows] = await Promise.all([
+    supabase.from("installment_plans").select("id, description, total_cents::text, installments_count, first_date, account_id, card_id, category_id, cancelled_at").order("created_at", { ascending: false }),
+    supabase.from("transactions_read").select("id, plan_id, installment_number, amount_cents, date, status, statement_month, trashed_at").not("plan_id", "is", null).limit(10000),
+  ]);
+  if (plans.error || rows.error) throw new Error("Não foi possível carregar os parcelamentos. Confira se a migration da Entrega 05 foi aplicada.");
+  const installments = rows.data as InstallmentRow[];
+  const ids = installments.map(r => r.id);
+  const refunds = ids.length
+    ? ((await supabase.from("transactions_read").select("refund_of, amount_cents").eq("nature", "refund").is("trashed_at", null).in("refund_of", ids).limit(10000)).data ?? []) as { refund_of: string; amount_cents: string }[]
+    : [];
+  const planOf = new Map(installments.map(r => [r.id, r.plan_id]));
+  const refundedByPlan = new Map<string, bigint>();
+  for (const r of refunds) {
+    const plan = planOf.get(r.refund_of)!;
+    refundedByPlan.set(plan, (refundedByPlan.get(plan) ?? 0n) + BigInt(r.amount_cents));
+  }
+  return { plans: plans.data as PlanRow[], installments, refundedByPlan };
 }
 
 /** Sum of active refunds linked to a purchase, in any month. */

@@ -20,6 +20,7 @@ const MIGRATIONS = [
   ["20261017150000_transacoes", ["transactions", "transactions_read"], ["account_balances", {}]],
   ["20261017180000_importacao_e_painel", ["import_batches"], ["daily_spending", { p_from: "2026-01-01", p_to: "2026-01-02", p_account: null }]],
   ["20261017210000_cartoes", ["credit_cards"], ["card_overview", {}]],
+  ["20261017230000_parcelamentos", ["installment_plans"], ["cancel_installment_plan", { p_plan: "00000000-0000-0000-0000-000000000000", p_refund_charged: false }]],
 ];
 const results = [];
 for (const [migration, tables, [fn, args]] of MIGRATIONS) {

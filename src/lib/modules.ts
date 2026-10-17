@@ -8,7 +8,7 @@ export const MODULES: Module[] = [
   { href: "/categorias", label: "Categorias", icon: ListTree, ready: true },
   { href: "/contas", label: "Contas", icon: Landmark, ready: true },
   { href: "/cartoes", label: "Cartões e faturas", icon: CreditCard, ready: true },
-  { href: "/parcelamentos", label: "Parcelamentos", icon: SplitSquareHorizontal, ready: false },
+  { href: "/parcelamentos", label: "Parcelamentos", icon: SplitSquareHorizontal, ready: true },
   { href: "/assinaturas", label: "Assinaturas", icon: Repeat, ready: false },
   { href: "/configuracoes", label: "Configurações", icon: Settings, ready: true },
 ];

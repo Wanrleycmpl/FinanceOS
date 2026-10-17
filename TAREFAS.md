@@ -39,11 +39,19 @@ Atualizado em 17/10/2026. Projeto recomeçado do zero em `Documents\FinanceOS` (
 - [x] Compra no cartão conta como gasto na data e não mexe no saldo; pagamento sai da conta sem contar a compra de novo.
 - [x] Tela Cartões: limite total/comprometido/disponível, faturas com fechamento, vencimento e situação (aberta, fechada, paga, parcial, atrasada), detalhe com compras, encargos, estornos e pagamentos; "Pagar fatura".
 - [x] Transações: "Pago com" conta ou cartão, pagamento de fatura, filtro por cartão; Visão geral com limites e próximos vencimentos.
-- [ ] **Você:** aplicar a migration 20261017210000 e rodar os comandos de Git (`docs/entregas/04-cartoes-e-faturas.md`).
+- [x] Migration 20261017210000 aplicada; código no GitHub.
 - [ ] Conferir as telas novas no navegador logado.
 
+## Entrega 05 — Parcelamentos
+- [x] Migration `20261017230000_parcelamentos.sql`: planos, parcelas com centavos exatos, proteção do total, cancelamento com/sem estorno.
+- [x] Parcelas na conta exigem confirmação de pagamento; no cartão vão para a fatura do mês e comprometem o limite.
+- [x] Tela Parcelamentos: criar com prévia da divisão, cronograma, pagas/pendentes, restante, progresso, confirmar/desfazer, cancelar.
+- [x] Transações: parcela editável só em descrição/data/categoria; atalho para o parcelamento.
+- [ ] **Você:** aplicar a migration 20261017230000 e rodar os comandos de Git (`docs/entregas/05-parcelamentos.md`).
+- [ ] Conferir as telas no navegador logado.
+
 ## Próximas
-- [ ] Entrega 05 — Parcelamentos. 06 — Assinaturas. 07 — Publicação.
+- [ ] Entrega 06 — Assinaturas. 07 — Publicação.
 
 ## Antes de publicar na internet
 - [ ] Trocar a senha de 6 números por uma senha longa (a entrada fica exposta quando o app estiver online).

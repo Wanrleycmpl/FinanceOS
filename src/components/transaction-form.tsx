@@ -11,6 +11,7 @@ export type CategoryOption = { id: string; name: string; kind: CategoryKind; chi
 export type TransactionDefaults = {
   id: string; nature: Nature; direction: "in" | "out"; account_id: string | null; to_account_id: string | null; card_id: string | null;
   statement_month: string | null; category_id: string | null; description: string; amount: string; date: string; status: "settled" | "pending";
+  plan_id?: string | null; // installment: amount and payment method belong to the plan
 };
 
 // Which category kinds fit each type of transaction (same rule as the database trigger).
@@ -30,6 +31,7 @@ export function TransactionForm(props: {
   const initialMeans = defaults ? (defaults.card_id && defaults.nature !== "card_payment" ? `card:${defaults.card_id}` : defaults.account_id ? `account:${defaults.account_id}` : "") : "";
   const [means, setMeans] = useState(initialMeans);
   const editing = Boolean(defaults);
+  const installment = Boolean(defaults?.plan_id);
   const cats = categories.filter(c => KINDS[nature].includes(c.kind));
   const accountSelect = (name: string, label: string, value?: string | null) => (
     <Field label={label} htmlFor={name}>
@@ -51,6 +53,9 @@ export function TransactionForm(props: {
         <p className="rounded-lg bg-surface-2 px-3 py-2 text-sm text-muted">
           Estorno de <strong className="text-ink">{refund.description}</strong>. Ainda pode ser estornado: <strong className="tabular text-ink">{refund.remaining}</strong>. O estorno usa o mesmo meio e a mesma categoria da compra, reduz a despesa e não vira receita.
         </p>
+      )}
+      {installment && (
+        <p className="rounded-lg bg-surface-2 px-3 py-2 text-sm text-muted">Esta é uma parcela de parcelamento: valor e meio de pagamento são definidos pelo plano (em Parcelamentos). Aqui você pode ajustar descrição, data e categoria.</p>
       )}
       {nature === "card_payment" && (
         <p className="rounded-lg bg-surface-2 px-3 py-2 text-sm text-muted">
@@ -83,7 +88,7 @@ export function TransactionForm(props: {
             defaultValue={defaults?.description ?? (refund ? `Estorno: ${refund.description}` : payment ? "Pagamento de fatura" : "")} />
         </Field>
         <Field label="Valor (R$)" htmlFor="amount" hint="Sempre positivo. Ex.: 1.234,56">
-          <Input id="amount" name="amount" inputMode="decimal" required placeholder="0,00" defaultValue={defaults?.amount ?? payment?.amount} className="tabular" />
+          <Input id="amount" name="amount" inputMode="decimal" required placeholder="0,00" defaultValue={defaults?.amount ?? payment?.amount} className="tabular" readOnly={installment} />
         </Field>
         <Field label="Data" htmlFor="date" hint={means.startsWith("card:") ? "Data da compra: define a fatura." : undefined}>
           <Input id="date" name="date" type="date" required defaultValue={defaults?.date ?? today} />
@@ -97,7 +102,8 @@ export function TransactionForm(props: {
 
         {nature === "expense" && (
           <Field label="Pago com" htmlFor="means">
-            <Select id="means" name="means" required value={means} onChange={e => setMeans(e.target.value)}>
+            {installment && <input type="hidden" name="means" value={means} />}
+            <Select id="means" name={installment ? undefined : "means"} required value={means} onChange={e => setMeans(e.target.value)} disabled={installment}>
               <option value="" disabled>Escolha…</option>
               <optgroup label="Contas">{accounts.map(a => <option key={a.id} value={`account:${a.id}`}>{a.label}</option>)}</optgroup>
               {cards.length > 0 && <optgroup label="Cartões de crédito">{cards.map(c => <option key={c.id} value={`card:${c.id}`}>{c.label}</option>)}</optgroup>}

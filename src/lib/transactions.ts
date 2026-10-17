@@ -123,6 +123,7 @@ export function friendlyTransactionError(message: string | undefined): string {
     card_not_found: "Cartão não encontrado.",
     refund_means_mismatch: "O estorno precisa usar o mesmo meio da compra: compra no cartão é estornada no mesmo cartão.",
     transactions_means_check: "Escolha uma conta ou um cartão (não os dois).",
+    installment_locked: "Parcela de parcelamento: valor, meio de pagamento e lixeira são controlados em Parcelamentos.",
   };
   const code = Object.keys(map).find(k => message?.includes(k));
   return code ? map[code] : "Não foi possível salvar o lançamento. Confira os campos e tente de novo.";

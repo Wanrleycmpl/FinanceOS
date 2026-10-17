@@ -15,14 +15,17 @@ App pessoal de um único usuário por enquanto (o modelo continua isolado por us
 | 01 | Fundação: Next.js, login único pelo Supabase Auth (sem cadastro público), perfil, contas manuais, catálogo de 15 categorias/141 subcategorias por usuário, RLS | aplicada no Supabase |
 | 02 | Transações: receitas, despesas, transferência própria, estorno, filtros, lixeira, ocultar × excluir do relatório, exportação CSV | aplicada no Supabase |
 | 03 | Importação CSV com prévia, mapeamento, lote atômico e revisão de duplicatas; Visão geral com ritmo, calor e categorias | aplicada no Supabase |
-| 04 | Cartões e faturas (limite comprometido, pagamento sem dupla contagem) | implementada localmente; migration pendente |
-| 05 | Parcelamentos (centavos exatos, confirmação de pagamento) | — |
+| 04 | Cartões e faturas (limite comprometido, pagamento sem dupla contagem) | aplicada no Supabase |
+| 05 | Parcelamentos (centavos exatos, confirmação de pagamento) | implementada localmente; migration pendente |
 | 06 | Assinaturas pessoais e próximos vencimentos | — |
 | 07 | Publicação controlada (Vercel, produção, backup) | — |
 | 08+ | Cobrança do SaaS, assistente de IA, Open Finance — com escopo próprio | — |
 
 ## Cartões
 Compra no cartão = despesa na data da compra (entra no resultado e nas categorias), sem mexer no saldo de conta; aumenta a dívida do cartão. Fatura = mês em que fecha; compra no dia do fechamento ou depois vai para a próxima. Pagamento de fatura sai da conta e reduz a dívida, sem ser despesa. Comprometido = compras − estornos − pagamentos feitos, incluindo lançamentos futuros. Todas as faturas são estimadas (lançamentos manuais/CSV), não lidas do banco.
+
+## Parcelamentos
+Um plano gera N parcelas (despesas), cada uma no seu mês; não existe compra-mãe somada. O total é dividido em centavos exatos com o resto nas primeiras parcelas. Na conta, cada parcela fica pendente até a confirmação do pagamento; no cartão, entra na fatura do mês (comprometendo o limite) e fica paga quando a fatura é paga. Valor e meio da parcela só mudam pelo plano; cancelar manda as não cobradas/pagas para a lixeira e, opcionalmente, estorna as já cobradas.
 
 ## Cobertura (como o painel evita inventar zero)
 Um dia só é “sem gastos confirmados” quando um extrato importado daquela conta cobre aquele dia (período = primeira a última data do arquivo). Sem extrato e sem lançamento, o dia é “sem cobertura”. Com o filtro “todas as contas”, o dia precisa estar coberto em todas as contas ativas. Média por dia corrido e projeção só aparecem com todos os dias decorridos cobertos.
