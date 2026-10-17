@@ -23,7 +23,7 @@ Atualizado em 17/10/2026. Projeto recomeçado do zero em `Documents\FinanceOS` (
 - [x] Filtros na URL, indicadores que seguem os filtros, paginação, ocultar × excluir × lixeira.
 - [x] Exportar CSV; saldos reais em Contas e Visão geral; seletor de mês na Visão geral.
 - [x] Testes no banco local (PGlite) e de filtros/CSV.
-- [ ] **Você:** aplicar as duas migrations e rodar os comandos de Git (`docs/entregas/02-transacoes.md`).
+- [x] Migrations 20261017120000 e 20261017150000 aplicadas no Supabase; código no GitHub (commit 6bc35df).
 - [ ] Conferir as telas logadas no navegador e `npm run test:rls` no Supabase real.
 
 ## Próximas

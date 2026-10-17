@@ -8,7 +8,7 @@
 | `npm run typecheck` | passou |
 | `npm test` | 6 arquivos, 30 testes, todos passaram |
 | `npm run build` | passou |
-| `npm run check:supabase` | executado: Supabase ainda vazio (as duas migrations "NÃO aplicada") |
+| `npm run check:supabase` | antes: Supabase vazio. Depois do `db push` do dono (17/10): as duas migrations "APLICADA" (todas as tabelas, views e funções existem; anônimo bloqueado) |
 
 Cobertos no banco local (PGlite, as duas migrations): saldo e indicadores exatos; transferência sem alterar consolidado nem resultado; estorno limitado ao valor da compra, com categoria herdada e acompanhando troca; compra com estorno protegida (lixeira/valor menor); ocultar só da lista; excluir dos relatórios sem mexer no saldo; lixeira fora de tudo e restaurável; pendente fora do saldo; liquidado futuro recusado; conta arquivada, data antes do saldo inicial, categoria arquivada/incompatível e troca de tipo recusadas; data do saldo inicial protegida; busca com % literal; isolamento entre A, B e anônimo. Também: filtros da URL, intervalo de meses, escape da busca, CSV (aspas, sinal, centavos, proteção contra fórmula).
 
