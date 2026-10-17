@@ -25,6 +25,11 @@ SaaS de finanças pessoais para brasileiros, hoje usado como app pessoal com **u
 - `tests/db.test.ts` roda as migrations num Postgres local (PGlite); isso não substitui `npm run test:rls` no Supabase real.
 - Nunca aplicar nada no Supabase remoto sem pedido expresso. `npm run check:supabase` (leitura anônima) é permitido.
 
+## Produção
+- Publicado pela Vercel a partir da `main`: todo push na `main` vai para produção. O Supabase em uso é a produção (dados reais).
+- Ordem obrigatória: migration aplicada (`db push`) ANTES do `git push` do código que depende dela. Migrations aditivas; remoções só em entrega posterior.
+- Guia: `docs/PUBLICACAO.md`.
+
 ## Toda entrega
 - **Pedido fixo do dono:** ao fim de TODA modificação, por menor que seja, a resposta no chat traz (1) os comandos de commit e push prontos para copiar, um por bloco, com os arquivos exatos e a branch real, e (2) a seção "Supabase nesta entrega" com o que ele precisa fazer no painel/CLI, ou "Nada a fazer no Supabase".
 - Não fazer commit nem push: o dono executa. Nunca `git add .`, force push ou reset destrutivo.

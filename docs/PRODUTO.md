@@ -16,9 +16,9 @@ App pessoal de um único usuário por enquanto (o modelo continua isolado por us
 | 02 | Transações: receitas, despesas, transferência própria, estorno, filtros, lixeira, ocultar × excluir do relatório, exportação CSV | aplicada no Supabase |
 | 03 | Importação CSV com prévia, mapeamento, lote atômico e revisão de duplicatas; Visão geral com ritmo, calor e categorias | aplicada no Supabase |
 | 04 | Cartões e faturas (limite comprometido, pagamento sem dupla contagem) | aplicada no Supabase |
-| 05 | Parcelamentos (centavos exatos, confirmação de pagamento) | implementada localmente; migration pendente |
-| 06 | Assinaturas pessoais e próximos vencimentos | — |
-| 07 | Publicação controlada (Vercel, produção, backup) | — |
+| 05 | Parcelamentos (centavos exatos, confirmação de pagamento) | aplicada no Supabase |
+| 06 | Assinaturas pessoais e próximos vencimentos | implementada localmente; migration pendente |
+| 07 | Publicação controlada (Vercel, produção, backup) | preparada; publicação pelo usuário |
 | 08+ | Cobrança do SaaS, assistente de IA, Open Finance — com escopo próprio | — |
 
 ## Cartões
@@ -26,6 +26,9 @@ Compra no cartão = despesa na data da compra (entra no resultado e nas categori
 
 ## Parcelamentos
 Um plano gera N parcelas (despesas), cada uma no seu mês; não existe compra-mãe somada. O total é dividido em centavos exatos com o resto nas primeiras parcelas. Na conta, cada parcela fica pendente até a confirmação do pagamento; no cartão, entra na fatura do mês (comprometendo o limite) e fica paga quando a fatura é paga. Valor e meio da parcela só mudam pelo plano; cancelar manda as não cobradas/pagas para a lixeira e, opcionalmente, estorna as já cobradas.
+
+## Assinaturas pessoais
+Cadastro com a previsão da próxima cobrança; previsão nunca é despesa. "Registrar cobrança" cria um lançamento (na conta ou cartão da assinatura) ligado a ela e avança a data, mantendo o dia (31 → último dia em meses curtos). Total mensal equivalente = valor × cobranças por ano ÷ 12 (R$ 120,00/ano = R$ 10,00/mês). A assinatura do próprio FinanceOS (SaaS) será outro cadastro, numa entrega futura.
 
 ## Cobertura (como o painel evita inventar zero)
 Um dia só é “sem gastos confirmados” quando um extrato importado daquela conta cobre aquele dia (período = primeira a última data do arquivo). Sem extrato e sem lançamento, o dia é “sem cobertura”. Com o filtro “todas as contas”, o dia precisa estar coberto em todas as contas ativas. Média por dia corrido e projeção só aparecem com todos os dias decorridos cobertos.

@@ -31,6 +31,7 @@ npm run test:rls         # isolamento real com dois usuários de teste
 - [docs/PRODUTO.md](docs/PRODUTO.md) — escopo, regras e roteiro de entregas
 - [docs/SUPABASE.md](docs/SUPABASE.md) — criar projeto, aplicar migrations, Auth e testes
 - [docs/GITHUB.md](docs/GITHUB.md) — commit, push e pull request
+- [docs/PUBLICACAO.md](docs/PUBLICACAO.md) — publicar na Vercel, ordem banco → código, voltar versão, backup
 - [docs/entregas/](docs/entregas/) — guia de cada entrega
 - [TAREFAS.md](TAREFAS.md) e [VERIFICACOES.md](VERIFICACOES.md) — estado real
 

@@ -8,6 +8,7 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 export const metadata: Metadata = {
   title: { default: "FinanceOS", template: "%s · FinanceOS" },
   description: "Finanças pessoais para brasileiros: contas, categorias e gastos com valores exatos.",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

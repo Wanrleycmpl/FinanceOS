@@ -1,5 +1,34 @@
 # Verificações
 
+## Entrega 07 — Publicação controlada (17/10/2026, executado nesta sessão)
+
+| Verificação | Resultado |
+|---|---|
+| `npm run lint` / `typecheck` | passaram |
+| `npm test` | 15 arquivos, 74 testes, todos passaram |
+| `npm run build` + `npm start` (produção local, porta 3001) | passou |
+| Cabeçalhos em `/entrar` | X-Frame-Options DENY, CSP frame-ancestors none, nosniff, Referrer-Policy, Permissions-Policy, HSTS, X-Robots-Tag noindex — presentes; X-Powered-By ausente |
+| `/robots.txt` | `Disallow: /` (acessível sem login) |
+| Sem login: `/visao-geral`, `/configuracoes/backup`, `/transacoes/exportar` | 307 → `/entrar` |
+| Login no navegador (produção local) com usuário inexistente | "Usuário ou senha incorretos."; nenhum erro no console (CSP não atrapalha o formulário) |
+| Varredura no código | todas as Server Actions chamam `requireUser()`; nenhuma chave secreta/service_role no código |
+
+**Não verificado:** publicação real na Vercel (feita pelo dono), backup baixado com dados reais (exige login) e a migration 20261017235000 (ainda não aplicada).
+
+## Entrega 06 — Assinaturas pessoais (17/10/2026, executado nesta sessão)
+
+| Verificação | Resultado |
+|---|---|
+| `npm run lint` | passou |
+| `npm run typecheck` | passou |
+| `npm test` | 15 arquivos, 74 testes, todos passaram |
+| `npm run build` | passou |
+| `npm run check:supabase` | 01–05 APLICADAS; 20261017235000_assinaturas ainda NÃO aplicada |
+
+Cobertos no banco (PGlite, as seis migrations): próxima data por período mantendo o dia (31/01 → 28/02 → 31/03; semestral e anual; semanal); cadastro não gera despesa; registrar cobrança cria um único lançamento com conta e categoria da assinatura e avança a data (inclusive pagamento atrasado com reajuste); anual no cartão cai na fatura; pausada não recebe cobrança; cobrança futura recusada; meio único; isolamento A/B/anônimo; sem DELETE. Também: equivalente mensal exato/arredondado com fórmula (R$ 120,00/ano = R$ 10,00/mês; trimestral; semanal ×52), custo anual e lista de próximas/atrasadas em TypeScript.
+
+**Não verificado:** telas no navegador logado (falta aplicar a migration 20261017235000).
+
 ## Entrega 05 — Parcelamentos (17/10/2026, executado nesta sessão)
 
 | Verificação | Resultado |

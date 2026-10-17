@@ -47,11 +47,25 @@ Atualizado em 17/10/2026. Projeto recomeçado do zero em `Documents\FinanceOS` (
 - [x] Parcelas na conta exigem confirmação de pagamento; no cartão vão para a fatura do mês e comprometem o limite.
 - [x] Tela Parcelamentos: criar com prévia da divisão, cronograma, pagas/pendentes, restante, progresso, confirmar/desfazer, cancelar.
 - [x] Transações: parcela editável só em descrição/data/categoria; atalho para o parcelamento.
-- [ ] **Você:** aplicar a migration 20261017230000 e rodar os comandos de Git (`docs/entregas/05-parcelamentos.md`).
+- [x] Migration 20261017230000 aplicada; código no GitHub.
 - [ ] Conferir as telas no navegador logado.
 
+## Entrega 06 — Assinaturas pessoais
+- [x] Migration `20261017235000_assinaturas.sql`: cadastro, próxima data mantendo o dia da cobrança, registro de cobrança atômico.
+- [x] Tela Assinaturas: serviço, valor, periodicidade, conta/cartão, categoria, próxima cobrança, status; total mensal equivalente com fórmula; custo anual; últimas cobranças.
+- [x] Previsão não é despesa; "Registrar cobrança" cria um único lançamento e avança a data. Visão geral com próximas cobranças.
+- [ ] **Você:** aplicar a migration 20261017235000 e rodar os comandos de Git (`docs/entregas/06-assinaturas.md`).
+- [ ] Conferir as telas no navegador logado.
+
+## Entrega 07 — Publicação controlada
+- [x] Cabeçalhos de segurança (sem iframe, HSTS, nosniff, permissões), sem indexação (robots + noindex), sem cabeçalho "powered by".
+- [x] Cópia de segurança completa em JSON (Configurações), protegida por login.
+- [x] Teste em modo produção local: cabeçalhos, robots, rotas privadas redirecionando, login com CSP.
+- [x] Guia `docs/PUBLICACAO.md` (Vercel, variáveis, Auth, proteção de previews, ordem banco → código, voltar versão, limites gratuitos).
+- [ ] **Você:** concluir a Entrega 06 (migration + commit), trocar para senha forte, baixar uma cópia e publicar seguindo `docs/entregas/07-publicacao.md`.
+- [ ] Conferir o app publicado no computador e no celular.
+
 ## Próximas
-- [ ] Entrega 06 — Assinaturas. 07 — Publicação.
 
 ## Antes de publicar na internet
 - [ ] Trocar a senha de 6 números por uma senha longa (a entrada fica exposta quando o app estiver online).
