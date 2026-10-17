@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/* FinanceOS: dark theme, soft green brand. Contrast checked for text on surfaces (AA). */
+@theme {
+  --color-canvas: #0b0f0e;
+  --color-surface: #121816;
+  --color-surface-2: #18201d;
+  --color-surface-3: #202a26;
+  --color-line: #26322d;
+  --color-ink: #e7efeb;
+  --color-muted: #9aaba3;
+  --color-brand: #5fd3a0;
+  --color-brand-ink: #062016;
+  --color-danger: #f28b82;
+  --color-warning: #f2c46d;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}

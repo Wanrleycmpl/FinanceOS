@@ -1,0 +1,26 @@
+# Tarefas
+
+Atualizado em 16/10/2026. Projeto recomeçado do zero em `Documents\FinanceOS` (a pasta antiga não é usada).
+
+## Entrega 01 — Fundação
+- [x] Next.js 16.4.2 + TypeScript + Tailwind 4, versões exatas, lockfile.
+- [x] Supabase SSR: sessão em cookie, `proxy.ts`, `requireUser()` com `getUser()`.
+- [x] Login único (app pessoal): usuário → e-mail interno, sem cadastro público nem recuperação por e-mail; trocar senha e sair em Configurações.
+- [x] Menu lateral (computador) e recolhível (celular); áreas futuras sem dados simulados.
+- [x] Contas manuais por instituição: criar, editar, arquivar, restaurar; saldo inicial em centavos exatos.
+- [x] Catálogo 15/141 copiado uma vez por usuário; criar, renomear, arquivar categorias.
+- [x] Perfil (nome), troca de senha.
+- [x] Migration `20261017120000_fundacao.sql` com RLS, FK composta, permissões por coluna, sem DELETE.
+- [x] Testes: dinheiro/datas/parcelas e migration em PGlite (isolamento A/B, anônimo).
+- [ ] **Você:** criar o Supabase, `.env.local`, aplicar a migration, desligar cadastro e criar o usuário `wanrley` (`docs/SUPABASE.md`).
+- [ ] **Você:** criar repositório no GitHub e fazer o primeiro push (`docs/entregas/01-fundacao.md`).
+- [ ] Rodar `npm run test:rls` e o roteiro de interface no Supabase real; corrigir o que aparecer.
+- [ ] Commitar `supabase/config.toml` gerado pelo `init`.
+
+## Próximas
+- [ ] Entrega 02 — Transações (ver `docs/PRODUTO.md`).
+- [ ] Entrega 03 — CSV e Visão geral completa.
+- [ ] Entrega 04 — Cartões e faturas. 05 — Parcelamentos. 06 — Assinaturas. 07 — Publicação.
+
+## Antes de publicar na internet
+- [ ] Trocar a senha de 6 números por uma senha longa (a entrada fica exposta quando o app estiver online).
