@@ -16,7 +16,7 @@ export function transactionsToCsv(rows: ExportRow[]): string {
   const header = ["Data", "Descrição", "Tipo", "Categoria", "Conta", "Conta destino", "Valor (R$)", "Situação", "Oculto", "Fora dos relatórios"];
   const lines = rows.map(r => {
     const cents = BigInt(r.amount_cents);
-    const signed = r.nature === "transfer" ? cents : r.direction === "in" ? cents : -cents;
+    const signed = r.nature === "transfer" ? cents : r.direction === "in" ? cents : -cents; // card payment: money leaving the account
     return [
       formatDateBR(r.date), text(r.description), NATURE_LABEL[r.nature], text(r.category), text(r.account), text(r.toAccount),
       cell(centsToInput(signed)), STATUS_LABEL[r.status], r.hidden ? "sim" : "não", r.excluded ? "sim" : "não",

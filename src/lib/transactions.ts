@@ -2,7 +2,7 @@
 // Shared by the list, the indicators and the CSV export so all use the same filters.
 import { isValidDateOnly } from "@/lib/dates";
 
-export type Nature = "income" | "expense" | "transfer" | "refund" | "financial";
+export type Nature = "income" | "expense" | "transfer" | "refund" | "financial" | "card_payment";
 export type Direction = "in" | "out";
 export type Status = "pending" | "settled";
 
@@ -12,6 +12,7 @@ export const NATURE_LABEL: Record<Nature, string> = {
   transfer: "Transferência entre contas",
   refund: "Estorno / cashback",
   financial: "Movimentação financeira",
+  card_payment: "Pagamento de fatura",
 };
 export const STATUS_LABEL: Record<Status, string> = { settled: "Liquidado", pending: "Pendente" };
 export const PAGE_SIZE = 20;
@@ -118,6 +119,10 @@ export function friendlyTransactionError(message: string | undefined): string {
     purchase_has_refunds: "Essa compra tem estornos. Mande os estornos para a lixeira antes, ou mantenha o valor acima deles.",
     category_archived: "Essa categoria está arquivada. Escolha outra ou restaure-a.",
     category_kind_mismatch: "Essa categoria não combina com o tipo do lançamento (ex.: categoria de receita numa despesa).",
+    card_archived: "Esse cartão está arquivado. Restaure-o em Cartões para lançar compras nele.",
+    card_not_found: "Cartão não encontrado.",
+    refund_means_mismatch: "O estorno precisa usar o mesmo meio da compra: compra no cartão é estornada no mesmo cartão.",
+    transactions_means_check: "Escolha uma conta ou um cartão (não os dois).",
   };
   const code = Object.keys(map).find(k => message?.includes(k));
   return code ? map[code] : "Não foi possível salvar o lançamento. Confira os campos e tente de novo.";

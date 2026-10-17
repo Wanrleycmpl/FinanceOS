@@ -1,6 +1,7 @@
 import "server-only";
 import { requireUser } from "@/lib/auth";
 import type { CategoryKind } from "@/lib/catalog";
+import type { StatementRow } from "@/lib/cards";
 import type { CategoryTotalRow, DayRow } from "@/lib/dashboard";
 import { escapeLike, filterRange, monthRange, PAGE_SIZE, summarize, type Direction, type Filters, type Nature, type Status } from "@/lib/transactions";
 
@@ -61,8 +62,10 @@ export type Transaction = {
   id: string;
   nature: Nature;
   direction: Direction;
-  account_id: string;
+  account_id: string | null;
   to_account_id: string | null;
+  card_id: string | null;
+  statement_month: string | null;
   category_id: string | null;
   refund_of: string | null;
   description: string;
@@ -74,7 +77,7 @@ export type Transaction = {
   trashed_at: string | null;
   created_at: string;
 };
-const TX_COLUMNS = "id, nature, direction, account_id, to_account_id, category_id, refund_of, description, amount_cents, date, status, hidden, excluded_from_reports, trashed_at, created_at";
+const TX_COLUMNS = "id, nature, direction, account_id, to_account_id, card_id, statement_month, category_id, refund_of, description, amount_cents, date, status, hidden, excluded_from_reports, trashed_at, created_at";
 
 /** Current settled balance and pending total per account (exact cents as text). */
 export async function getBalances(): Promise<Map<string, { balance: string; pending: string }>> {
@@ -95,7 +98,7 @@ export async function listTransactions(f: Filters, categories: Category[], pageS
   let q = supabase.from("transactions_read").select(TX_COLUMNS, { count: "exact" }).gte("date", from).lte("date", to);
   q = f.trash ? q.not("trashed_at", "is", null) : q.is("trashed_at", null);
   if (!f.showHidden && !f.trash) q = q.eq("hidden", false);
-  if (f.account) q = q.or(`account_id.eq.${f.account},to_account_id.eq.${f.account}`);
+  if (f.account) q = q.or(`account_id.eq.${f.account},to_account_id.eq.${f.account},card_id.eq.${f.account}`);
   if (f.category) q = q.in("category_id", categoryScope(categories, f.category));
   if (f.nature) q = q.eq("nature", f.nature);
   if (f.status) q = q.eq("status", f.status);
@@ -139,6 +142,47 @@ export async function getCategoryTotals(month: string, account: string | null): 
   const { data, error } = await supabase.rpc("category_totals", { p_from: from, p_to: to, p_account: account });
   if (error) throw new Error("Não foi possível somar as categorias. Confira se a migration da Entrega 03 foi aplicada.");
   return data as CategoryTotalRow[];
+}
+
+export type CreditCard = {
+  id: string; institution_id: string; institution_name: string; name: string; last4: string | null;
+  limit_cents: string; closing_day: number; due_day: number; archived_at: string | null;
+};
+
+export async function getCards(): Promise<CreditCard[]> {
+  const { supabase } = await requireUser();
+  const [cards, institutions] = await Promise.all([
+    supabase.from("credit_cards").select("id, institution_id, name, last4, limit_cents::text, closing_day, due_day, archived_at").order("name"),
+    supabase.from("institutions").select("id, name"),
+  ]);
+  if (cards.error || institutions.error) throw new Error("Não foi possível carregar os cartões. Confira se a migration da Entrega 04 foi aplicada.");
+  const names = new Map((institutions.data as { id: string; name: string }[]).map(i => [i.id, i.name]));
+  return (cards.data as Omit<CreditCard, "institution_name">[]).map(c => ({ ...c, institution_name: names.get(c.institution_id) ?? "" }));
+}
+
+/** Limit, committed (includes future installments) and available per card, exact cents as text. */
+export async function getCardOverview(): Promise<Map<string, { limit: string; committed: string; available: string }>> {
+  const { supabase } = await requireUser();
+  const { data, error } = await supabase.rpc("card_overview");
+  if (error) throw new Error("Não foi possível calcular os limites dos cartões. Confira se a migration da Entrega 04 foi aplicada.");
+  return new Map((data as { card_id: string; limit_cents: string; committed_cents: string; available_cents: string }[]).map(r => [r.card_id, { limit: r.limit_cents, committed: r.committed_cents, available: r.available_cents }]));
+}
+
+export async function getCardStatements(cardId: string): Promise<StatementRow[]> {
+  const { supabase } = await requireUser();
+  const { data, error } = await supabase.rpc("card_statements", { p_card: cardId });
+  if (error) throw new Error("Não foi possível carregar as faturas.");
+  return data as StatementRow[];
+}
+
+/** All transactions of one statement (any date), newest first. */
+export async function getStatementTransactions(cardId: string, statementMonth: string): Promise<Transaction[]> {
+  const { supabase } = await requireUser();
+  const { data, error } = await supabase.from("transactions_read").select(TX_COLUMNS)
+    .eq("card_id", cardId).eq("statement_month", statementMonth).is("trashed_at", null)
+    .order("date", { ascending: false }).limit(1000);
+  if (error) throw new Error("Não foi possível carregar a fatura.");
+  return data as Transaction[];
 }
 
 /** Sum of active refunds linked to a purchase, in any month. */

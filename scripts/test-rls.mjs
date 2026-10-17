@@ -98,6 +98,16 @@ try {
     assert.equal((await b.rpc('account_balances')).data.some(x => x.account_id === accA), false);
   });
 
+  await step('cartões: B não vê nem usa o cartão de A', async () => {
+    const c = await a.rpc('save_card', { p_id: null, p_institution: `${tag} Banco`, p_name: `${tag} Cartão`, p_last4: null, p_limit_cents: '100000', p_closing_day: 10, p_due_day: 20 });
+    assert.equal(c.error, null, 'save_card falhou (migration de cartões aplicada?)');
+    created.push([a, 'credit_cards', c.data]);
+    assert.deepEqual((await b.from('credit_cards').select('id').eq('id', c.data)).data, []);
+    assert.equal((await b.rpc('card_overview')).data.some(x => x.card_id === c.data), false);
+    assert.ok((await b.from('transactions').insert({ nature: 'expense', direction: 'out', card_id: c.data, description: 'Invasão', amount_cents: '1', date: '2026-01-02' })).error);
+    const upd = await b.from('credit_cards').update({ limit_cents: 1 }).eq('id', c.data).select('id'); assert.ok(upd.error || upd.data.length === 0);
+  });
+
   await step('anônimo não lê nem grava', async () => {
     assert.equal(((await anon.from('transactions').select('id')).data ?? []).length, 0);
     for (const t of ['accounts', 'categories', 'profiles']) { const r = await anon.from(t).select('id'); assert.ok(r.error || r.data.length === 0); }

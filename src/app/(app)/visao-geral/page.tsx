@@ -3,8 +3,9 @@ import Link from "next/link";
 import { PaceChart } from "@/components/charts/pace-chart";
 import { SpendingHeatmap } from "@/components/charts/spending-heatmap";
 import { buttonVariants, Card, PageHeader, Select } from "@/components/ui";
+import { describeStatement, STATEMENT_STATUS_LABEL } from "@/lib/cards";
 import { buildHeatmap, buildPace, rankCategories, summarizePace } from "@/lib/dashboard";
-import { ACCOUNT_KIND_LABEL, getAccounts, getBalances, getCategories, getCategoryTotals, getDailySpending, getProfile, getSummary, listTransactions } from "@/lib/data";
+import { ACCOUNT_KIND_LABEL, getAccounts, getCardOverview, getCards, getCardStatements, getBalances, getCategories, getCategoryTotals, getDailySpending, getProfile, getSummary, listTransactions } from "@/lib/data";
 import { formatDateBR, todayInBrazil } from "@/lib/dates";
 import { centsFromText, formatBRL, sumCents } from "@/lib/money";
 import { filtersToQuery, monthLabel, NATURE_LABEL, parseFilters, shiftMonth } from "@/lib/transactions";
@@ -50,6 +51,16 @@ export default async function Page(props: PageProps<"/visao-geral">) {
   const firstName = profile.displayName.split(" ")[0];
   const diff = pace.previousSamePeriod !== null ? pace.total - pace.previousSamePeriod : null;
 
+  // Cards: limit is never money in an account; upcoming bills come from the registered transactions.
+  const [cards, cardOverview] = await Promise.all([getCards(), getCardOverview()]);
+  const activeCards = cards.filter(c => !c.archived_at);
+  const cardLimit = activeCards.reduce((s, c) => s + centsFromText(cardOverview.get(c.id)?.limit ?? c.limit_cents), 0n);
+  const cardCommitted = activeCards.reduce((s, c) => s + centsFromText(cardOverview.get(c.id)?.committed ?? "0"), 0n);
+  const bills = (await Promise.all(activeCards.map(async c => (await getCardStatements(c.id))
+    .map(r => ({ card: c, ...describeStatement(r, c, today) }))
+    .filter(b => b.remaining > 0n && b.status !== "open" && b.status !== "paid"))))
+    .flat().sort((a, b) => a.due.localeCompare(b.due)).slice(0, 4);
+
   return (
     <>
       <PageHeader title={firstName ? `Olá, ${firstName}` : "Visão geral"} description={`${monthLabel(f.month)}${f.account && byId.get(f.account) ? ` · ${byId.get(f.account)!.name}` : " · todas as contas"}. Resultado do mês e saldo das contas são indicadores diferentes.`}>
@@ -75,6 +86,40 @@ export default async function Page(props: PageProps<"/visao-geral">) {
         <Stat label={`Comparado a ${monthLabel(prevMonth).split(" ")[0].toLowerCase()}`} value={diff === null ? "—" : `${diff > 0n ? "+" : ""}${formatBRL(diff)}`} tone={diff === null ? "muted" : undefined}
           note={pace.elapsed === 0 ? "Mês ainda não começou." : `Gasto líquido do dia 1 ao ${pace.elapsed}: ${formatBRL(pace.total)} agora × ${formatBRL(pace.previousSamePeriod ?? 0n)} no mesmo intervalo de ${monthLabel(prevMonth).split(" ")[0].toLowerCase()}.`} />
       </div>
+
+      {activeCards.length > 0 && (
+        <Card className="mt-6">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="font-medium">Cartões de crédito</h2>
+            <Link href="/cartoes" className={buttonVariants({ variant: "ghost", size: "sm" })}>Ver faturas</Link>
+          </div>
+          <div className="grid gap-4 md:grid-cols-[1fr_1.4fr]">
+            <dl className="tabular grid grid-cols-3 gap-3 text-sm">
+              <div><dt className="text-xs text-muted">Limite</dt><dd className="font-medium">{formatBRL(cardLimit)}</dd></div>
+              <div><dt className="text-xs text-muted">Comprometido</dt><dd className="font-medium">{formatBRL(cardCommitted)}</dd></div>
+              <div><dt className="text-xs text-muted">Disponível</dt><dd className={cn("font-medium", cardLimit - cardCommitted < 0n && "text-danger")}>{formatBRL(cardLimit - cardCommitted)}</dd></div>
+              <dd className="col-span-3 text-xs text-muted">Limite de cartão não entra no saldo: é crédito, não dinheiro. Comprometido inclui parcelas futuras.</dd>
+            </dl>
+            <div>
+              <p className="mb-1 text-xs text-muted">Próximos vencimentos (faturas fechadas a pagar)</p>
+              {bills.length === 0 ? <p className="text-sm text-muted">Nenhuma fatura fechada em aberto.</p> : (
+                <ul className="divide-y divide-line text-sm">
+                  {bills.map(b => (
+                    <li key={`${b.card.id}-${b.month}`}>
+                      <Link href={`/cartoes?cartao=${b.card.id}&fatura=${b.month.slice(0, 7)}`} className="flex items-center gap-3 py-2 hover:underline">
+                        <span className="tabular w-20 text-xs text-muted">{formatDateBR(b.due)}</span>
+                        <span className="min-w-0 flex-1 truncate">{b.card.name}</span>
+                        <span className={cn("text-xs", b.status.startsWith("late") ? "text-danger" : "text-warning")}>{STATEMENT_STATUS_LABEL[b.status]}</span>
+                        <span className="tabular">{formatBRL(b.remaining)}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.6fr_1fr]">
         <Card>
@@ -146,9 +191,9 @@ export default async function Page(props: PageProps<"/visao-geral">) {
                 <li key={t.id} className="flex items-center gap-4 px-5 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate">{t.description}</p>
-                    <p className="text-xs text-muted">{formatDateBR(t.date)} · {byId.get(t.account_id)?.name}{t.nature !== "income" && t.nature !== "expense" && ` · ${NATURE_LABEL[t.nature]}`}{t.status === "pending" && " · pendente"}</p>
+                    <p className="text-xs text-muted">{formatDateBR(t.date)} · {t.card_id && !t.account_id ? "Cartão" : byId.get(t.account_id ?? "")?.name}{t.nature !== "income" && t.nature !== "expense" && ` · ${NATURE_LABEL[t.nature]}`}{t.status === "pending" && " · pendente"}</p>
                   </div>
-                  <p className={cn("tabular", t.nature === "transfer" ? "text-muted" : t.direction === "in" ? "text-brand" : "")}>{t.nature === "transfer" ? "" : t.direction === "in" ? "+" : "−"}{formatBRL(centsFromText(t.amount_cents))}</p>
+                  <p className={cn("tabular", t.nature === "transfer" || t.nature === "card_payment" ? "text-muted" : t.direction === "in" ? "text-brand" : "")}>{t.nature === "transfer" || t.nature === "card_payment" ? "" : t.direction === "in" ? "+" : "−"}{formatBRL(centsFromText(t.amount_cents))}</p>
                 </li>
               ))}
             </ul>

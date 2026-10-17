@@ -9,18 +9,23 @@ import { friendlyTransactionError } from "@/lib/transactions";
 import type { ActionState } from "@/lib/utils";
 
 const optionalUuid = z.union([z.uuid(), z.literal("")]).transform(v => v || null);
-/** Only internal links back to the Transactions list are accepted. */
+/** Only internal links back to the Transactions or Cards screens are accepted. */
 const backTo = (v: FormDataEntryValue | null) => {
   const s = String(v ?? "");
-  return /^\/transacoes(\?[\w=&%.+-]*)?$/.test(s) ? s : "/transacoes";
+  return /^\/(transacoes|cartoes)(\?[\w=&%.+-]*)?$/.test(s) ? s : "/transacoes";
 };
 
+const meansValue = z.union([z.string().regex(/^(account|card):[0-9a-f-]{36}$/), z.literal("")]).optional();
+const monthValue = z.union([z.string().regex(/^d{4}-(0[1-9]|1[0-2])$/), z.literal("")]).optional();
 const schema = z.object({
   id: optionalUuid,
-  nature: z.enum(["income", "expense", "transfer", "refund", "financial"], "Escolha o tipo do lançamento."),
+  nature: z.enum(["income", "expense", "transfer", "refund", "financial", "card_payment"], "Escolha o tipo do lançamento."),
   direction: z.enum(["in", "out"]).optional(),
-  account_id: z.uuid("Escolha a conta."),
-  to_account_id: optionalUuid,
+  means: meansValue, // expense/refund: "account:<id>" or "card:<id>"
+  account_id: optionalUuid.optional(),
+  to_account_id: optionalUuid.optional(),
+  card_id: optionalUuid.optional(),
+  statement_month: monthValue, // YYYY-MM; empty = automatic from the date and the card closing day
   category_id: optionalUuid,
   refund_of: optionalUuid,
   description: z.string().trim().min(2, "Descreva o lançamento (2 a 140 letras).").max(140, "Descreva o lançamento (2 a 140 letras)."),
@@ -37,16 +42,33 @@ export async function saveTransaction(_: ActionState, form: FormData): Promise<A
   const cents = parseBRL(v.amount);
   if (cents === null || cents <= 0n) return { error: "Valor inválido. Use um valor positivo, como 1.234,56; o tipo define se entra ou sai." };
   if (v.status === "settled" && v.date > todayInBrazil()) return { error: "Lançamento com data futura precisa ficar como Pendente." };
-  if (v.nature === "transfer" && (!v.to_account_id || v.to_account_id === v.account_id)) return { error: "Escolha uma conta de destino diferente da conta de origem." };
+
+  // Where the money moves: an account, a card, or (card payment) both.
+  let accountId = v.account_id ?? null, cardId: string | null = null;
+  if (v.nature === "expense" || v.nature === "refund") {
+    if (!v.means) return { error: "Escolha a conta ou o cartão." };
+    const [kind, id] = v.means.split(":");
+    accountId = kind === "account" ? id : null;
+    cardId = kind === "card" ? id : null;
+  } else if (v.nature === "card_payment") {
+    cardId = v.card_id ?? null;
+    if (!cardId) return { error: "Escolha o cartão da fatura." };
+    if (!v.statement_month) return { error: "Escolha qual fatura está sendo paga." };
+  }
+  if (!accountId && !cardId) return { error: "Escolha a conta." };
+  if (v.nature === "card_payment" && !accountId) return { error: "Escolha a conta de onde saiu o pagamento." };
+  if (v.nature === "transfer" && (!v.to_account_id || v.to_account_id === accountId)) return { error: "Escolha uma conta de destino diferente da conta de origem." };
   if (v.nature === "refund" && !v.refund_of) return { error: "O estorno precisa estar ligado a uma despesa." };
   if (v.nature === "financial" && !v.direction) return { error: "Diga se o dinheiro entrou ou saiu da conta." };
 
   const direction = v.nature === "financial" ? v.direction! : v.nature === "income" || v.nature === "refund" ? "in" : "out";
   const fields = {
     direction,
-    account_id: v.account_id,
+    account_id: accountId,
     to_account_id: v.nature === "transfer" ? v.to_account_id : null,
-    category_id: v.nature === "refund" ? null : v.category_id, // the database copies the purchase's category
+    card_id: cardId,
+    statement_month: cardId && v.statement_month ? `${v.statement_month}-01` : null, // null = the database computes it
+    category_id: v.nature === "refund" || v.nature === "card_payment" ? null : v.category_id, // refunds copy the purchase category
     description: v.description,
     amount_cents: cents.toString(), // bigint as text: exact
     date: v.date,
@@ -60,7 +82,8 @@ export async function saveTransaction(_: ActionState, form: FormData): Promise<A
   revalidatePath("/transacoes");
   revalidatePath("/visao-geral");
   revalidatePath("/contas");
-  if (v.id || v.nature === "refund") redirect(backTo(form.get("back")));
+  revalidatePath("/cartoes");
+  if (v.id || v.nature === "refund" || v.nature === "card_payment") redirect(backTo(form.get("back")));
   return { ok: "Lançamento salvo." };
 }
 

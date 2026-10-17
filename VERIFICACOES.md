@@ -1,5 +1,19 @@
 # Verificações
 
+## Entrega 04 — Cartões e faturas (17/10/2026, executado nesta sessão)
+
+| Verificação | Resultado |
+|---|---|
+| `npm run lint` | passou |
+| `npm run typecheck` | passou |
+| `npm test` | 11 arquivos, 58 testes, todos passaram |
+| `npm run build` | passou |
+| `npm run check:supabase` | 01, 02 e 03 APLICADAS; 20261017210000_cartoes ainda NÃO aplicada |
+
+Cobertos no banco (PGlite, as quatro migrations): fatura pela data de fechamento (inclusive fevereiro e virada de ano); compra no cartão sem conta, contando como despesa e sem mexer no saldo; um único meio (conta ou cartão); receita no cartão recusada; estorno no mesmo cartão (na conta é recusado) virando crédito; pagamento exige fatura e não aceita categoria; pagamento reduz saldo e dívida sem nova despesa; parcela futura compromete o limite; encargos separados; cartão arquivado sem compras novas, mas pagável; isolamento A/B/anônimo. Regras anteriores (Entregas 01–03) continuam passando com a troca das restrições. Também: datas de fechamento/vencimento e situação das faturas em TypeScript.
+
+**Não verificado:** telas no navegador logado (falta aplicar a migration 20261017210000).
+
 ## Entrega 03 — Importação CSV e painel (17/10/2026, executado nesta sessão)
 
 | Verificação | Resultado |

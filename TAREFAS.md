@@ -31,11 +31,19 @@ Atualizado em 17/10/2026. Projeto recomeçado do zero em `Documents\FinanceOS` (
 - [x] Importação: leitura no navegador (UTF-8/Latin-1), separador automático, mapeamento, prévia, revisão de duplicatas, lote tudo-ou-nada.
 - [x] Visão geral: filtro de mês e conta, ritmo diário/acumulado com mês anterior, médias com fórmula, projeção só com cobertura total, mapa de calor clicável, principais categorias.
 - [x] Categorias: valores do mês, participação, rosca de despesas e receitas separadas; Transações filtráveis por dia.
-- [ ] **Você:** aplicar a migration 20261017180000 e rodar os comandos de Git (`docs/entregas/03-importacao-e-painel.md`).
+- [x] Migration 20261017180000 aplicada; código no GitHub.
+- [ ] Conferir as telas novas no navegador logado.
+
+## Entrega 04 — Cartões e faturas
+- [x] Migration `20261017210000_cartoes.sql`: cartões, fatura por data de fechamento, pagamento de fatura, limite comprometido.
+- [x] Compra no cartão conta como gasto na data e não mexe no saldo; pagamento sai da conta sem contar a compra de novo.
+- [x] Tela Cartões: limite total/comprometido/disponível, faturas com fechamento, vencimento e situação (aberta, fechada, paga, parcial, atrasada), detalhe com compras, encargos, estornos e pagamentos; "Pagar fatura".
+- [x] Transações: "Pago com" conta ou cartão, pagamento de fatura, filtro por cartão; Visão geral com limites e próximos vencimentos.
+- [ ] **Você:** aplicar a migration 20261017210000 e rodar os comandos de Git (`docs/entregas/04-cartoes-e-faturas.md`).
 - [ ] Conferir as telas novas no navegador logado.
 
 ## Próximas
-- [ ] Entrega 04 — Cartões e faturas. 05 — Parcelamentos. 06 — Assinaturas. 07 — Publicação.
+- [ ] Entrega 05 — Parcelamentos. 06 — Assinaturas. 07 — Publicação.
 
 ## Antes de publicar na internet
 - [ ] Trocar a senha de 6 números por uma senha longa (a entrada fica exposta quando o app estiver online).

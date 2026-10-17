@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useActionState } from "react";
 import { saveAccount } from "@/app/actions/accounts";
+import { saveCard } from "@/app/actions/cards";
 import { createCategory, renameCategory } from "@/app/actions/categories";
 import { updateProfile } from "@/app/actions/profile";
 import { Button, buttonVariants, Field, FormMessage, Input, Select } from "@/components/ui";
@@ -92,6 +93,31 @@ export function ProfileForm({ displayName }: { displayName: string }) {
       <Field label="Nome" htmlFor="display_name"><Input id="display_name" name="display_name" defaultValue={displayName} required maxLength={60} /></Field>
       <FormMessage state={state} />
       <div><Button disabled={pending}>{pending ? "Salvando…" : "Salvar"}</Button></div>
+    </form>
+  );
+}
+
+type CardDefaults = { id: string; institution: string; name: string; last4: string; limit: string; closing_day: number; due_day: number };
+
+export function CardForm({ card }: { card?: CardDefaults }) {
+  const [state, action, pending] = useActionState(saveCard, undefined);
+  return (
+    <form action={action} className="grid gap-4" key={state?.ok ?? "form"}>
+      <input type="hidden" name="id" value={card?.id ?? ""} />
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Banco / emissor" htmlFor="card-institution"><Input id="card-institution" name="institution" required maxLength={80} defaultValue={card?.institution} /></Field>
+        <Field label="Nome do cartão" htmlFor="card-name" hint="Ex.: Roxinho, Black."><Input id="card-name" name="name" required maxLength={60} defaultValue={card?.name} /></Field>
+        <Field label="Últimos 4 dígitos" htmlFor="card-last4" hint="Opcional. Nunca informe o número completo."><Input id="card-last4" name="last4" inputMode="numeric" maxLength={4} pattern="\d{4}" defaultValue={card?.last4} /></Field>
+        <Field label="Limite total (R$)" htmlFor="card-limit"><Input id="card-limit" name="limit" inputMode="decimal" required placeholder="0,00" className="tabular" defaultValue={card?.limit} /></Field>
+        <Field label="Dia de fechamento" htmlFor="card-closing" hint="Compras a partir deste dia vão para a fatura seguinte."><Input id="card-closing" name="closing_day" type="number" min={1} max={31} required defaultValue={card?.closing_day} /></Field>
+        <Field label="Dia de vencimento" htmlFor="card-due"><Input id="card-due" name="due_day" type="number" min={1} max={31} required defaultValue={card?.due_day} /></Field>
+      </div>
+      <FormMessage state={state} />
+      <div className="flex flex-wrap gap-2">
+        <Button disabled={pending}>{pending ? "Salvando…" : card ? "Salvar alterações" : "Adicionar cartão"}</Button>
+        {card && <Link href={`/cartoes?cartao=${card.id}`} className={buttonVariants({ variant: "ghost" })}>Cancelar</Link>}
+      </div>
+      {card && <p className="text-xs text-muted">Mudar o dia de fechamento vale para compras novas; as já lançadas continuam na fatura em que estão.</p>}
     </form>
   );
 }
