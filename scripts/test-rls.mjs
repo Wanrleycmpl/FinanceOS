@@ -9,6 +9,7 @@ const client = () => createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.
 const a = client(), b = client(), anon = client();
 const tag = `RLS-${Date.now()}`;
 const created = []; // [client, table, id] archived at the end
+const createdTx = []; // A transaction ids sent to the trash at the end (refunds first)
 let current = 'início', failed = false;
 const step = async (name, fn) => { current = name; await fn(); console.log(`ok  ${name}`); };
 
@@ -72,7 +73,33 @@ try {
     assert.equal(r.error, null); assert.equal(r.data.kind, 'income'); created.push([a, 'categories', r.data.id]);
   });
 
+  let purchase, refund;
+  await step('transações: despesa, estorno limitado e saldo exato', async () => {
+    const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date());
+    const tx = extra => ({ nature: 'expense', direction: 'out', account_id: accA, description: `${tag} compra`, amount_cents: '12345', date: today, status: 'settled', ...extra });
+    const p = await a.from('transactions').insert(tx()).select('id').single(); assert.equal(p.error, null, 'insert de despesa falhou (migration de transações aplicada?)');
+    purchase = p.data.id; createdTx.push(purchase);
+    assert.ok((await a.from('transactions').insert(tx({ nature: 'refund', direction: 'in', refund_of: purchase, amount_cents: '20000' }))).error, 'estorno acima da compra foi aceito');
+    const r = await a.from('transactions').insert(tx({ nature: 'refund', direction: 'in', refund_of: purchase, amount_cents: '2345' })).select('id').single(); assert.equal(r.error, null);
+    refund = r.data.id; createdTx.unshift(refund);
+    const bal = (await a.rpc('account_balances')).data.find(x => x.account_id === accA);
+    assert.equal(bal.balance_cents, (99999999999999n - 12345n + 2345n).toString());
+    const read = await a.from('transactions_read').select('amount_cents').eq('id', purchase).single(); assert.equal(read.data.amount_cents, '12345');
+  });
+
+  await step('transações: B não lê, não altera, não estorna e não lança na conta de A', async () => {
+    assert.deepEqual((await b.from('transactions').select('id').eq('id', purchase)).data, []);
+    const upd = await b.from('transactions').update({ description: 'Invasão' }).eq('id', purchase).select('id'); assert.ok(upd.error || upd.data.length === 0);
+    const accB = (await b.rpc('save_account', { p_id: null, p_institution: `${tag} Banco B`, p_name: `${tag} Conta B`, p_kind: 'cash', p_opening_balance_cents: '0', p_opening_date: '2026-01-01' })).data;
+    created.push([b, 'accounts', accB]);
+    assert.ok((await b.from('transactions').insert({ nature: 'refund', direction: 'in', account_id: accB, refund_of: purchase, description: 'Invasão', amount_cents: '1', date: '2026-01-02' })).error);
+    assert.ok((await b.from('transactions').insert({ nature: 'expense', direction: 'out', account_id: accA, description: 'Invasão', amount_cents: '1', date: '2026-01-02' })).error);
+    assert.ok((await b.from('transactions').insert({ nature: 'transfer', direction: 'out', account_id: accB, to_account_id: accA, description: 'Invasão', amount_cents: '1', date: '2026-01-02' })).error);
+    assert.equal((await b.rpc('account_balances')).data.some(x => x.account_id === accA), false);
+  });
+
   await step('anônimo não lê nem grava', async () => {
+    assert.equal(((await anon.from('transactions').select('id')).data ?? []).length, 0);
     for (const t of ['accounts', 'categories', 'profiles']) { const r = await anon.from(t).select('id'); assert.ok(r.error || r.data.length === 0); }
     assert.ok((await anon.rpc('save_account', { p_id: null, p_institution: 'X', p_name: 'Anon', p_kind: 'cash', p_opening_balance_cents: '0', p_opening_date: '2026-01-01' })).error);
   });
@@ -82,6 +109,10 @@ try {
 } finally {
   // No deletes exist by design: test data is archived and keeps the RLS- prefix.
   let clean = true;
+  for (const id of createdTx) {
+    const r = await a.from('transactions').update({ trashed_at: new Date().toISOString() }).eq('id', id).select('id');
+    if (r.error || r.data?.length !== 1) clean = false;
+  }
   for (const [c, table, id] of created) {
     const r = await c.from(table).update({ archived_at: new Date().toISOString() }).eq('id', id).select('id');
     if (r.error || r.data?.length !== 1) clean = false;

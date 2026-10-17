@@ -15,19 +15,31 @@ const state = (error, data) => {
   return `indeterminado (${error.code ?? 'sem código'})`;
 };
 
-const found = [];
-for (const table of ['profiles', 'institutions', 'accounts', 'accounts_read', 'category_templates', 'categories']) {
-  const { data, error } = await anon.from(table).select('*').limit(1);
-  found.push(state(error, data)); console.log(`${table}: ${found.at(-1)}`);
+const MIGRATIONS = [
+  ["20261017120000_fundacao", ["profiles", "institutions", "accounts", "accounts_read", "category_templates", "categories"], ["save_account", { p_id: null, p_institution: "x", p_name: "x", p_kind: "cash", p_opening_balance_cents: "0", p_opening_date: "2026-01-01" }]],
+  ["20261017150000_transacoes", ["transactions", "transactions_read"], ["account_balances", {}]],
+];
+const results = [];
+for (const [migration, tables, [fn, args]] of MIGRATIONS) {
+  const found = [];
+  for (const table of tables) {
+    const { data, error } = await anon.from(table).select("*").limit(1);
+    found.push(state(error, data)); console.log(`${table}: ${found.at(-1)}`);
+  }
+  const rpc = await anon.rpc(fn, args);
+  found.push(rpc.error ? state(rpc.error) : "EXECUTOU para anônimo (revisar!)"); console.log(`função ${fn}: ${found.at(-1)}`);
+  results.push([migration, found]);
 }
-const rpc = await anon.rpc('save_account', { p_id: null, p_institution: 'x', p_name: 'x', p_kind: 'cash', p_opening_balance_cents: '0', p_opening_date: '2026-01-01' });
-found.push(rpc.error ? state(rpc.error) : 'EXECUTOU para anônimo (revisar!)'); console.log(`função save_account: ${found.at(-1)}`);
 
 try {
   const s = await (await fetch(`${url}/auth/v1/settings`, { headers: { apikey: key } })).json();
   console.log(`Auth: e-mail ${s.external?.email ? 'habilitado' : 'desabilitado'}; confirmação de e-mail ${s.mailer_autoconfirm ? 'DESLIGADA' : 'exigida'}.`);
 } catch { console.log('Auth: configurações públicas indisponíveis.'); }
 
-const summary = found.every(s => s === 'existe') ? 'APLICADA' : found.every(s => s === 'AUSENTE') ? 'NÃO aplicada' : 'PARCIAL/indeterminada — não aplique nada sem revisar';
-console.log(`\nMigration 20261017120000_fundacao: ${summary}. (Não lê o histórico nem testa usuários; veja npm run test:rls.)`);
-if (found.some(s => s.includes('revisar'))) process.exitCode = 1;
+console.log("");
+for (const [migration, found] of results) {
+  const summary = found.every(s => s === "existe") ? "APLICADA" : found.every(s => s === "AUSENTE") ? "NÃO aplicada" : "PARCIAL/indeterminada — não aplique nada sem revisar";
+  console.log(`Migration ${migration}: ${summary}.`);
+}
+console.log("(Não lê o histórico nem testa usuários; veja npm run test:rls.)");
+if (results.some(([, found]) => found.some(s => s.includes("revisar")))) process.exitCode = 1;

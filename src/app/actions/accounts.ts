@@ -33,7 +33,11 @@ export async function saveAccount(_: ActionState, form: FormData): Promise<Actio
     p_opening_balance_cents: cents.toString(), // bigint as text: exact
     p_opening_date: v.opening_date,
   });
-  if (error) return { error: "Não foi possível salvar a conta. Tente de novo." };
+  if (error) {
+    if (error.message.includes("opening_date_after_transactions")) return { error: "Já existem lançamentos antes dessa data nesta conta. Escolha uma data igual ou anterior ao primeiro lançamento." };
+    if (error.message.includes("opening_date_in_future")) return { error: "A data do saldo inicial não pode estar no futuro." };
+    return { error: "Não foi possível salvar a conta. Tente de novo." };
+  }
   revalidatePath("/contas");
   revalidatePath("/visao-geral");
   if (v.id) redirect("/contas");

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { setAccountArchived } from "@/app/actions/accounts";
 import { AccountForm } from "@/components/forms";
 import { Badge, Button, buttonVariants, Card, PageHeader } from "@/components/ui";
-import { ACCOUNT_KIND_LABEL, getAccounts } from "@/lib/data";
+import { ACCOUNT_KIND_LABEL, getAccounts, getBalances } from "@/lib/data";
 import { formatDateBR, todayInBrazil } from "@/lib/dates";
 import { centsFromText, centsToInput, formatBRL } from "@/lib/money";
 
@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: "Contas" };
 export default async function Page(props: PageProps<"/contas">) {
   const { editar, arquivadas } = await props.searchParams;
   const showArchived = arquivadas === "1";
-  const all = await getAccounts();
+  const [all, balances] = await Promise.all([getAccounts(), getBalances()]);
   const visible = all.filter(a => showArchived || !a.archived_at);
   const editing = typeof editar === "string" ? all.find(a => a.id === editar) : undefined;
   const archivedCount = all.filter(a => a.archived_at).length;
@@ -44,9 +44,12 @@ export default async function Page(props: PageProps<"/contas">) {
                   <li key={a.id} className="flex flex-wrap items-center gap-x-4 gap-y-2 px-5 py-4">
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">{a.name} {a.archived_at && <Badge className="ml-1">Arquivada</Badge>}</p>
-                      <p className="text-xs text-muted">{ACCOUNT_KIND_LABEL[a.kind]} · saldo inicial em {formatDateBR(a.opening_date)}</p>
+                      <p className="text-xs text-muted">{ACCOUNT_KIND_LABEL[a.kind]} · saldo inicial {formatBRL(centsFromText(a.opening_balance_cents))} em {formatDateBR(a.opening_date)}</p>
                     </div>
-                    <p className="tabular text-right font-medium">{formatBRL(centsFromText(a.opening_balance_cents))}</p>
+                    <div className="text-right">
+                      <p className="tabular font-medium">{formatBRL(centsFromText(balances.get(a.id)?.balance ?? a.opening_balance_cents))}</p>
+                      <p className="text-xs text-muted">saldo atual</p>
+                    </div>
                     <div className="flex gap-2">
                       {!a.archived_at && <Link href={`/contas?editar=${a.id}`} className={buttonVariants({ variant: "secondary", size: "sm" })}>Editar</Link>}
                       <form action={setAccountArchived}>

@@ -1,41 +1,20 @@
 // Runs every migration in an in-memory PostgreSQL (PGlite) with a minimal stand-in for
 // Supabase's auth schema and roles. Proves the SQL runs and that RLS/grants isolate users.
 // It does NOT replace testing on the real Supabase (Auth, e-mail, PostgREST): see npm run test:rls.
-import { readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { PGlite } from "@electric-sql/pglite";
 import { beforeAll, describe, expect, it } from "vitest";
+import type { PGlite } from "@electric-sql/pglite";
 import { CATALOG } from "@/lib/catalog";
+import { createDb } from "./helpers/pg";
 
 const A = "00000000-0000-0000-0000-00000000000a";
 const B = "00000000-0000-0000-0000-00000000000b";
 let db: PGlite;
-
-const SUPABASE_STUB = `
-  create role anon nologin; create role authenticated nologin;
-  create schema auth;
-  create table auth.users (id uuid primary key, raw_user_meta_data jsonb default '{}'::jsonb);
-  create function auth.uid() returns uuid language sql stable as $$
-    select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
-  grant usage on schema public, auth to anon, authenticated;
-  grant execute on function auth.uid() to anon, authenticated;
-  grant select on auth.users to authenticated;
-`;
-
-async function as<T>(user: string | null, fn: () => Promise<T>): Promise<T> {
-  await db.exec(`set role ${user ? "authenticated" : "anon"}`);
-  await db.query("select set_config('request.jwt.claim.sub', $1, false)", [user ?? ""]);
-  try { return await fn(); } finally { await db.exec("reset role"); }
-}
+let as: Awaited<ReturnType<typeof createDb>>["as"];
 const fails = (p: Promise<unknown>) => expect(p).rejects.toThrow();
 
 beforeAll(async () => {
-  db = new PGlite();
-  await db.exec(SUPABASE_STUB);
   // A user that exists before the migration must also get profile + catalog.
-  await db.query("insert into auth.users(id) values ($1)", [A]);
-  const dir = join(process.cwd(), "supabase", "migrations");
-  for (const file of readdirSync(dir).filter(f => f.endsWith(".sql")).sort()) await db.exec(readFileSync(join(dir, file), "utf8"));
+  ({ db, as } = await createDb({ usersBeforeMigrations: [A] }));
   await db.query(`insert into auth.users(id, raw_user_meta_data) values ($1, '{"display_name":"Bia"}')`, [B]);
 }, 60_000);
 

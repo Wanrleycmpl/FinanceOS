@@ -13,7 +13,7 @@ App pessoal de um único usuário por enquanto (o modelo continua isolado por us
 | Nº | Escopo | Estado |
 |---|---|---|
 | 01 | Fundação: Next.js, login único pelo Supabase Auth (sem cadastro público), perfil, contas manuais, catálogo de 15 categorias/141 subcategorias por usuário, RLS | implementada localmente; Supabase pendente |
-| 02 | Transações: receitas, despesas, transferência própria, estorno, filtros, lixeira, ocultar × excluir do relatório | — |
+| 02 | Transações: receitas, despesas, transferência própria, estorno, filtros, lixeira, ocultar × excluir do relatório, exportação CSV | implementada localmente; Supabase pendente |
 | 03 | Importação CSV com prévia, mapeamento, lote atômico e revisão de duplicatas; Visão geral com ritmo, calor e categorias | — |
 | 04 | Cartões e faturas (limite comprometido, pagamento sem dupla contagem) | — |
 | 05 | Parcelamentos (centavos exatos, confirmação de pagamento) | — |

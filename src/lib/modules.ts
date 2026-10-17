@@ -4,7 +4,7 @@ export type Module = { href: string; label: string; icon: LucideIcon; ready: boo
 
 export const MODULES: Module[] = [
   { href: "/visao-geral", label: "Visão geral", icon: LayoutDashboard, ready: true },
-  { href: "/transacoes", label: "Transações", icon: ReceiptText, ready: false },
+  { href: "/transacoes", label: "Transações", icon: ReceiptText, ready: true },
   { href: "/categorias", label: "Categorias", icon: ListTree, ready: true },
   { href: "/contas", label: "Contas", icon: Landmark, ready: true },
   { href: "/cartoes", label: "Cartões e faturas", icon: CreditCard, ready: false },

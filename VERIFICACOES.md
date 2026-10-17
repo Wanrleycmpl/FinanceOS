@@ -1,5 +1,19 @@
 # Verificações
 
+## Entrega 02 — Transações (17/10/2026, executado nesta sessão)
+
+| Verificação | Resultado |
+|---|---|
+| `npm run lint` | passou |
+| `npm run typecheck` | passou |
+| `npm test` | 6 arquivos, 30 testes, todos passaram |
+| `npm run build` | passou |
+| `npm run check:supabase` | executado: Supabase ainda vazio (as duas migrations "NÃO aplicada") |
+
+Cobertos no banco local (PGlite, as duas migrations): saldo e indicadores exatos; transferência sem alterar consolidado nem resultado; estorno limitado ao valor da compra, com categoria herdada e acompanhando troca; compra com estorno protegida (lixeira/valor menor); ocultar só da lista; excluir dos relatórios sem mexer no saldo; lixeira fora de tudo e restaurável; pendente fora do saldo; liquidado futuro recusado; conta arquivada, data antes do saldo inicial, categoria arquivada/incompatível e troca de tipo recusadas; data do saldo inicial protegida; busca com % literal; isolamento entre A, B e anônimo. Também: filtros da URL, intervalo de meses, escape da busca, CSV (aspas, sinal, centavos, proteção contra fórmula).
+
+**Não verificado:** telas logadas no navegador (exigem o Supabase com as migrations) e `npm run test:rls` (ampliado para transações, ainda não executado).
+
 ## Entrega 01 — Fundação (16/10/2026, executado nesta sessão)
 
 | Verificação | Resultado |

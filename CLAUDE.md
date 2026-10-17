@@ -26,6 +26,7 @@ SaaS de finanças pessoais para brasileiros, hoje usado como app pessoal com **u
 - Nunca aplicar nada no Supabase remoto sem pedido expresso. `npm run check:supabase` (leitura anônima) é permitido.
 
 ## Toda entrega
+- **Pedido fixo do dono:** ao fim de TODA modificação, por menor que seja, a resposta no chat traz (1) os comandos de commit e push prontos para copiar, um por bloco, com os arquivos exatos e a branch real, e (2) a seção "Supabase nesta entrega" com o que ele precisa fazer no painel/CLI, ou "Nada a fazer no Supabase".
 - Não fazer commit nem push: o dono executa. Nunca `git add .`, force push ou reset destrutivo.
 - Criar `docs/entregas/NN-descricao.md`: o que mudou, arquivos, como testar, verificações reais, comandos Git (PowerShell) concretos, mensagem de commit, PR/Vercel e bloco **"Supabase nesta entrega"** (ou "Sem alteração de banco; não há SQL para executar").
 - Atualizar `TAREFAS.md` e `VERIFICACOES.md`. Não afirmar teste não executado.

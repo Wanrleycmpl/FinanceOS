@@ -1,6 +1,6 @@
 # Tarefas
 
-Atualizado em 16/10/2026. Projeto recomeçado do zero em `Documents\FinanceOS` (a pasta antiga não é usada).
+Atualizado em 17/10/2026. Projeto recomeçado do zero em `Documents\FinanceOS` (a pasta antiga não é usada).
 
 ## Entrega 01 — Fundação
 - [x] Next.js 16.4.2 + TypeScript + Tailwind 4, versões exatas, lockfile.
@@ -17,8 +17,16 @@ Atualizado em 16/10/2026. Projeto recomeçado do zero em `Documents\FinanceOS` (
 - [ ] Rodar `npm run test:rls` e o roteiro de interface no Supabase real; corrigir o que aparecer.
 - [ ] Commitar `supabase/config.toml` gerado pelo `init`.
 
+## Entrega 02 — Transações
+- [x] Migration `20261017150000_transacoes.sql`: tabela, regras automáticas, RLS, indicadores e saldos.
+- [x] Receita, despesa, transferência própria (uma linha), movimentação financeira, estorno limitado.
+- [x] Filtros na URL, indicadores que seguem os filtros, paginação, ocultar × excluir × lixeira.
+- [x] Exportar CSV; saldos reais em Contas e Visão geral; seletor de mês na Visão geral.
+- [x] Testes no banco local (PGlite) e de filtros/CSV.
+- [ ] **Você:** aplicar as duas migrations e rodar os comandos de Git (`docs/entregas/02-transacoes.md`).
+- [ ] Conferir as telas logadas no navegador e `npm run test:rls` no Supabase real.
+
 ## Próximas
-- [ ] Entrega 02 — Transações (ver `docs/PRODUTO.md`).
 - [ ] Entrega 03 — CSV e Visão geral completa.
 - [ ] Entrega 04 — Cartões e faturas. 05 — Parcelamentos. 06 — Assinaturas. 07 — Publicação.
 

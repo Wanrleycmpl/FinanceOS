@@ -28,7 +28,7 @@ Confira (só lê, sem login):
 npm run check:supabase
 ```
 
-Esperado agora: todas as linhas `AUSENTE` e "Migration 20261017120000_fundacao: NÃO aplicada".
+Esperado num projeto novo: todas as linhas `AUSENTE` e cada migration "NÃO aplicada".
 
 ## 3. CLI do Supabase (sem instalar dependência no projeto)
 
@@ -49,8 +49,8 @@ npx supabase@2.121.0 db push --dry-run
 ```
 
 - `SEU_PROJECT_REF`: troque pelo Project ID do passo 1. O `link` pede a senha do banco: digite só no terminal.
-- `migration list` esperado: `20261017120000` na coluna Local e Remote vazia.
-- `db push --dry-run` esperado: somente `20261017120000_fundacao.sql`. O dry-run só **lista**; não prova que o SQL funciona. Se aparecer outra coisa, pare e me mande a saída.
+- `migration list` esperado: as versões de `supabase/migrations/` na coluna Local; na coluna Remote, só as que você já aplicou.
+- `db push --dry-run` esperado: exatamente as migrations pendentes listadas no guia da entrega (`docs/entregas/`), em ordem. O dry-run só **lista**; não prova que o SQL funciona. Se aparecer outra coisa, pare e me mande a saída.
 
 ## 4. Aplicar
 
@@ -123,7 +123,7 @@ Esperado: linhas `ok`, depois `PASS: isolamento entre A, B e anônimo confirmado
 
 ## Alternativa: SQL Editor (só se você preferir)
 
-Cole `supabase/migrations/20261017120000_fundacao.sql` inteiro no SQL Editor e execute. Isso **não** registra o histórico da CLI. Antes de usar `db push` no futuro, conferimos juntos (consultas do passo 4) e registramos a versão com `npx supabase@2.121.0 migration repair --status applied 20261017120000`. Não misture os dois métodos sem esse registro.
+Cole cada arquivo de `supabase/migrations/` ainda não aplicado, em ordem de nome, inteiro no SQL Editor e execute. Isso **não** registra o histórico da CLI. Antes de usar `db push` no futuro, conferimos juntos (consultas do passo 4) e registramos cada versão aplicada com `npx supabase@2.121.0 migration repair --status applied <versão>`. Não misture os dois métodos sem esse registro.
 
 ## Variáveis — onde cada uma vai
 
