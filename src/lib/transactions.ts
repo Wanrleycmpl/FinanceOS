@@ -1,5 +1,7 @@
 // Pure helpers for the Transactions screen: labels, URL filters and month ranges.
 // Shared by the list, the indicators and the CSV export so all use the same filters.
+import { isValidDateOnly } from "@/lib/dates";
+
 export type Nature = "income" | "expense" | "transfer" | "refund" | "financial";
 export type Direction = "in" | "out";
 export type Status = "pending" | "settled";
@@ -16,6 +18,7 @@ export const PAGE_SIZE = 20;
 
 export type Filters = {
   month: string; // YYYY-MM
+  day: string | null; // YYYY-MM-DD inside month (clicked on the heatmap)
   account: string | null;
   category: string | null;
   nature: Nature | null;
@@ -35,8 +38,10 @@ export function parseFilters(params: Params, today: string): Filters {
   const nature = one(params.natureza);
   const status = one(params.status);
   const page = Number.parseInt(one(params.pagina), 10);
+  const day = isValidDateOnly(one(params.dia)) ? one(params.dia) : null;
   return {
-    month: /^\d{4}-(0[1-9]|1[0-2])$/.test(month) ? month : today.slice(0, 7),
+    month: day ? day.slice(0, 7) : /^\d{4}-(0[1-9]|1[0-2])$/.test(month) ? month : today.slice(0, 7),
+    day,
     account: UUID.test(one(params.conta)) ? one(params.conta) : null,
     category: UUID.test(one(params.categoria)) ? one(params.categoria) : null,
     nature: nature in NATURE_LABEL ? (nature as Nature) : null,
@@ -53,6 +58,7 @@ export function filtersToQuery(f: Filters, override: Partial<Filters> = {}): str
   const v = { ...f, page: 1, ...override };
   const p = new URLSearchParams();
   p.set("mes", v.month);
+  if (v.day && v.day.startsWith(v.month)) p.set("dia", v.day);
   if (v.account) p.set("conta", v.account);
   if (v.category) p.set("categoria", v.category);
   if (v.nature) p.set("natureza", v.nature);
@@ -69,6 +75,11 @@ export function monthRange(month: string): { from: string; to: string } {
   const [y, m] = month.split("-").map(Number);
   const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
   return { from: `${month}-01`, to: `${month}-${String(last).padStart(2, "0")}` };
+}
+
+/** The date range the filters select: one day (heatmap click) or the whole month. */
+export function filterRange(f: Pick<Filters, "month" | "day">): { from: string; to: string } {
+  return f.day ? { from: f.day, to: f.day } : monthRange(f.month);
 }
 
 export function shiftMonth(month: string, delta: number): string {

@@ -6,7 +6,14 @@ const ID = "3f2b8c1e-1d2a-4b5c-9e8f-0a1b2c3d4e5f";
 describe("filtros de transações", () => {
   it("lê os filtros da URL e ignora valores inválidos", () => {
     const f = parseFilters({ mes: "2026-13", conta: "x", categoria: ID, natureza: "hack", status: "pending", busca: "  café ", pagina: "-3", ocultas: "1" }, "2026-10-17");
-    expect(f).toEqual({ month: "2026-10", account: null, category: ID, nature: null, status: "pending", q: "café", showHidden: true, trash: false, page: 1 });
+    expect(f).toEqual({ month: "2026-10", day: null, account: null, category: ID, nature: null, status: "pending", q: "café", showHidden: true, trash: false, page: 1 });
+  });
+  it("dia válido define o mês e entra nos links", () => {
+    const f = parseFilters({ mes: "2026-01", dia: "2026-03-15" }, "2026-10-17");
+    expect([f.month, f.day]).toEqual(["2026-03", "2026-03-15"]);
+    expect(filtersToQuery(f)).toBe("mes=2026-03&dia=2026-03-15");
+    expect(filtersToQuery(f, { month: "2026-04" })).toBe("mes=2026-04");
+    expect(parseFilters({ dia: "2026-02-30" }, "2026-10-17").day).toBeNull();
   });
   it("monta links mantendo os filtros e voltando para a página 1", () => {
     const f = parseFilters({ mes: "2026-03", natureza: "expense", pagina: "4" }, "2026-10-17");

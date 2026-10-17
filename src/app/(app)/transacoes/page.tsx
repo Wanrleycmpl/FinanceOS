@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeftRight, ChevronLeft, ChevronRight, Download, Plus } from "lucide-react";
+import { ArrowLeftRight, ChevronLeft, ChevronRight, Download, Plus, Upload } from "lucide-react";
 import { setTransactionFlag } from "@/app/actions/transactions";
 import { TransactionForm, type CategoryOption } from "@/components/transaction-form";
 import { Badge, Button, buttonVariants, Card, PageHeader, Select, Input } from "@/components/ui";
@@ -116,6 +116,7 @@ export default async function Page(props: PageProps<"/transacoes">) {
     <>
       <PageHeader title="Transações" description="Receitas, despesas, transferências entre suas contas e estornos. Os indicadores seguem os filtros abaixo.">
         <div className="flex flex-wrap gap-2">
+          <Link href="/transacoes/importar" className={buttonVariants({ variant: "secondary", size: "sm" })}><Upload aria-hidden className="size-4" />Importar CSV</Link>
           <a href={`/transacoes/exportar?${filtersToQuery(f)}`} className={buttonVariants({ variant: "secondary", size: "sm" })}><Download aria-hidden className="size-4" />Exportar CSV</a>
           <Link href={`/transacoes?${query}&novo=1`} className={buttonVariants({ size: "sm" })}><Plus aria-hidden className="size-4" />Novo lançamento</Link>
         </div>
@@ -191,7 +192,7 @@ export default async function Page(props: PageProps<"/transacoes">) {
       </Card>
 
       <p className="mb-3 text-sm text-muted">
-        {monthLabel(f.month)}{activeCategory && ` · ${activeCategory}`}{f.account && byId.get(f.account) && ` · ${accountLabel(byId.get(f.account)!)}`}
+        {f.day ? <>Dia {formatDateBR(f.day)} · <Link className="text-brand hover:underline" href={`/transacoes?${filtersToQuery({ ...f, day: null })}`}>ver o mês inteiro</Link></> : monthLabel(f.month)}{activeCategory && ` · ${activeCategory}`}{f.account && byId.get(f.account) && ` · ${accountLabel(byId.get(f.account)!)}`}
       </p>
 
       <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">

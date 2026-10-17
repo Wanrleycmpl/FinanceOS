@@ -18,6 +18,7 @@ const state = (error, data) => {
 const MIGRATIONS = [
   ["20261017120000_fundacao", ["profiles", "institutions", "accounts", "accounts_read", "category_templates", "categories"], ["save_account", { p_id: null, p_institution: "x", p_name: "x", p_kind: "cash", p_opening_balance_cents: "0", p_opening_date: "2026-01-01" }]],
   ["20261017150000_transacoes", ["transactions", "transactions_read"], ["account_balances", {}]],
+  ["20261017180000_importacao_e_painel", ["import_batches"], ["daily_spending", { p_from: "2026-01-01", p_to: "2026-01-02", p_account: null }]],
 ];
 const results = [];
 for (const [migration, tables, [fn, args]] of MIGRATIONS) {

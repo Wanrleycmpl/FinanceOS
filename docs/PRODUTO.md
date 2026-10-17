@@ -12,14 +12,17 @@ App pessoal de um único usuário por enquanto (o modelo continua isolado por us
 ## Entregas
 | Nº | Escopo | Estado |
 |---|---|---|
-| 01 | Fundação: Next.js, login único pelo Supabase Auth (sem cadastro público), perfil, contas manuais, catálogo de 15 categorias/141 subcategorias por usuário, RLS | implementada localmente; Supabase pendente |
-| 02 | Transações: receitas, despesas, transferência própria, estorno, filtros, lixeira, ocultar × excluir do relatório, exportação CSV | implementada localmente; Supabase pendente |
-| 03 | Importação CSV com prévia, mapeamento, lote atômico e revisão de duplicatas; Visão geral com ritmo, calor e categorias | — |
+| 01 | Fundação: Next.js, login único pelo Supabase Auth (sem cadastro público), perfil, contas manuais, catálogo de 15 categorias/141 subcategorias por usuário, RLS | aplicada no Supabase |
+| 02 | Transações: receitas, despesas, transferência própria, estorno, filtros, lixeira, ocultar × excluir do relatório, exportação CSV | aplicada no Supabase |
+| 03 | Importação CSV com prévia, mapeamento, lote atômico e revisão de duplicatas; Visão geral com ritmo, calor e categorias | implementada localmente; migration pendente |
 | 04 | Cartões e faturas (limite comprometido, pagamento sem dupla contagem) | — |
 | 05 | Parcelamentos (centavos exatos, confirmação de pagamento) | — |
 | 06 | Assinaturas pessoais e próximos vencimentos | — |
 | 07 | Publicação controlada (Vercel, produção, backup) | — |
 | 08+ | Cobrança do SaaS, assistente de IA, Open Finance — com escopo próprio | — |
+
+## Cobertura (como o painel evita inventar zero)
+Um dia só é “sem gastos confirmados” quando um extrato importado daquela conta cobre aquele dia (período = primeira a última data do arquivo). Sem extrato e sem lançamento, o dia é “sem cobertura”. Com o filtro “todas as contas”, o dia precisa estar coberto em todas as contas ativas. Média por dia corrido e projeção só aparecem com todos os dias decorridos cobertos.
 
 ## Catálogo de categorias
 Fonte única: `src/lib/catalog.ts` (15 categorias, 141 subcategorias). A migration de fundação copia o catálogo para cada usuário novo, uma única vez, com IDs próprios; o usuário pode renomear, criar e arquivar sem perder histórico.

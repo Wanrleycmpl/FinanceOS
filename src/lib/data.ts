@@ -1,7 +1,8 @@
 import "server-only";
 import { requireUser } from "@/lib/auth";
 import type { CategoryKind } from "@/lib/catalog";
-import { escapeLike, monthRange, PAGE_SIZE, summarize, type Direction, type Filters, type Nature, type Status } from "@/lib/transactions";
+import type { CategoryTotalRow, DayRow } from "@/lib/dashboard";
+import { escapeLike, filterRange, monthRange, PAGE_SIZE, summarize, type Direction, type Filters, type Nature, type Status } from "@/lib/transactions";
 
 export type AccountKind = "checking" | "savings" | "wallet" | "cash";
 export const ACCOUNT_KIND_LABEL: Record<AccountKind, string> = {
@@ -90,7 +91,7 @@ function categoryScope(categories: Category[], id: string): string[] {
 
 export async function listTransactions(f: Filters, categories: Category[], pageSize = PAGE_SIZE) {
   const { supabase } = await requireUser();
-  const { from, to } = monthRange(f.month);
+  const { from, to } = filterRange(f);
   let q = supabase.from("transactions_read").select(TX_COLUMNS, { count: "exact" }).gte("date", from).lte("date", to);
   q = f.trash ? q.not("trashed_at", "is", null) : q.is("trashed_at", null);
   if (!f.showHidden && !f.trash) q = q.eq("hidden", false);
@@ -105,9 +106,9 @@ export async function listTransactions(f: Filters, categories: Category[], pageS
   return { rows: data as Transaction[], total: count ?? 0 };
 }
 
-export async function getSummary(f: Pick<Filters, "month" | "account" | "category" | "nature" | "status" | "q">) {
+export async function getSummary(f: Pick<Filters, "month" | "day" | "account" | "category" | "nature" | "status" | "q">) {
   const { supabase } = await requireUser();
-  const { from, to } = monthRange(f.month);
+  const { from, to } = filterRange(f);
   const { data, error } = await supabase.rpc("transaction_summary", {
     p_from: from, p_to: to, p_account: f.account, p_category: f.category, p_nature: f.nature, p_status: f.status, p_search: f.q,
   });
@@ -120,6 +121,24 @@ export async function getTransaction(id: string): Promise<Transaction | null> {
   const { supabase } = await requireUser();
   const { data } = await supabase.from("transactions_read").select(TX_COLUMNS).eq("id", id).maybeSingle();
   return (data as Transaction | null) ?? null;
+}
+
+/** Net spending per day of a month, with "has records" and "covered by an imported statement". */
+export async function getDailySpending(month: string, account: string | null): Promise<DayRow[]> {
+  const { supabase } = await requireUser();
+  const { from, to } = monthRange(month);
+  const { data, error } = await supabase.rpc("daily_spending", { p_from: from, p_to: to, p_account: account });
+  if (error) throw new Error("Não foi possível calcular o ritmo de gastos. Confira se a migration da Entrega 03 foi aplicada.");
+  return data as DayRow[];
+}
+
+/** Totals per leaf category (income and net expense), same exclusions as the indicators. */
+export async function getCategoryTotals(month: string, account: string | null): Promise<CategoryTotalRow[]> {
+  const { supabase } = await requireUser();
+  const { from, to } = monthRange(month);
+  const { data, error } = await supabase.rpc("category_totals", { p_from: from, p_to: to, p_account: account });
+  if (error) throw new Error("Não foi possível somar as categorias. Confira se a migration da Entrega 03 foi aplicada.");
+  return data as CategoryTotalRow[];
 }
 
 /** Sum of active refunds linked to a purchase, in any month. */

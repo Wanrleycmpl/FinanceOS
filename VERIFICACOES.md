@@ -1,5 +1,20 @@
 # Verificações
 
+## Entrega 03 — Importação CSV e painel (17/10/2026, executado nesta sessão)
+
+| Verificação | Resultado |
+|---|---|
+| `npm run lint` | passou |
+| `npm run typecheck` | passou |
+| `npm test` | 9 arquivos, 47 testes, todos passaram |
+| `npm run build` | passou |
+| `npm run check:supabase` | 20261017120000 e 20261017150000 APLICADAS; 20261017180000 ainda NÃO aplicada |
+| Paleta dos gráficos | validador de dados visuais: 8 cores aprovadas no fundo #121816 (luminosidade, croma, daltonismo, contraste ≥ 3:1) |
+
+Cobertos: leitura de CSV (BOM, CRLF, aspas, quebra de linha, separador, datas BR/ISO, valores BR/ponto/parênteses/sinal no fim, limite), mapeamento automático (formato Nubank), repetidas no arquivo × IDs distintos; no banco (PGlite): lote tudo-ou-nada, mesmo arquivo recusado, ID externo repetido derruba o lote, linha fora do período recusada, lote vazio registra cobertura, isolamento A/B/anônimo, dia com gasto × coberto sem gasto × sem cobertura, estorno reduzindo dia e categoria, transferência fora dos totais; painel: dias decorridos, acumulado, comparação no mesmo intervalo, média por dia com registro, média corrida/projeção só com cobertura total, arredondamento em centavos, estados do mapa de calor, soma de subcategorias sem dupla contagem.
+
+**Não verificado:** telas novas no navegador logado (falta aplicar a migration 20261017180000 e entrar com o seu usuário).
+
 ## Entrega 02 — Transações (17/10/2026, executado nesta sessão)
 
 | Verificação | Resultado |

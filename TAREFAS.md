@@ -26,8 +26,15 @@ Atualizado em 17/10/2026. Projeto recomeçado do zero em `Documents\FinanceOS` (
 - [x] Migrations 20261017120000 e 20261017150000 aplicadas no Supabase; código no GitHub (commit 6bc35df).
 - [ ] Conferir as telas logadas no navegador e `npm run test:rls` no Supabase real.
 
+## Entrega 03 — Importação CSV e Visão geral completa
+- [x] Migration `20261017180000_importacao_e_painel.sql`: lotes com hash, ID externo único, cobertura, gasto por dia e totais por categoria.
+- [x] Importação: leitura no navegador (UTF-8/Latin-1), separador automático, mapeamento, prévia, revisão de duplicatas, lote tudo-ou-nada.
+- [x] Visão geral: filtro de mês e conta, ritmo diário/acumulado com mês anterior, médias com fórmula, projeção só com cobertura total, mapa de calor clicável, principais categorias.
+- [x] Categorias: valores do mês, participação, rosca de despesas e receitas separadas; Transações filtráveis por dia.
+- [ ] **Você:** aplicar a migration 20261017180000 e rodar os comandos de Git (`docs/entregas/03-importacao-e-painel.md`).
+- [ ] Conferir as telas novas no navegador logado.
+
 ## Próximas
-- [ ] Entrega 03 — CSV e Visão geral completa.
 - [ ] Entrega 04 — Cartões e faturas. 05 — Parcelamentos. 06 — Assinaturas. 07 — Publicação.
 
 ## Antes de publicar na internet
